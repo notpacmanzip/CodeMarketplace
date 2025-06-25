@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, TextAreaField, SelectField, DecimalField, BooleanField, IntegerField, HiddenField, SubmitField, DateTimeLocalField
+from wtforms import StringField, TextAreaField, SelectField, DecimalField, BooleanField, IntegerField, HiddenField, SubmitField, DateTimeLocalField, URLField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, URL, Optional
 
 class ProfileForm(FlaskForm):
@@ -69,10 +69,10 @@ class SearchForm(FlaskForm):
 class TeamForm(FlaskForm):
     name = StringField('Team Name', validators=[DataRequired(), Length(min=3, max=200)])
     description = TextAreaField('Description', validators=[Length(max=1000)])
+    avatar_url = URLField('Team Avatar URL', validators=[Optional(), URL()])
     is_public = BooleanField('Public Team', default=True)
     max_members = SelectField('Maximum Members', choices=[(5, '5'), (10, '10'), (20, '20'), (50, '50')], 
                              coerce=int, default=10, validators=[DataRequired()])
-    avatar = FileField('Team Avatar', validators=[FileAllowed(['jpg', 'png', 'gif'], 'Images only!')])
     submit = SubmitField('Create Team')
 
 

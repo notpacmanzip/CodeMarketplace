@@ -594,15 +594,11 @@ def create_team():
         team = Team(
             name=form.name.data,
             description=form.description.data,
+            avatar_url=form.avatar_url.data,
             owner_id=current_user.id,
             is_public=form.is_public.data,
             max_members=form.max_members.data
         )
-        
-        # Handle avatar upload
-        if form.avatar.data:
-            avatar_path = save_uploaded_file(form.avatar.data)
-            team.avatar_url = avatar_path
         
         db.session.add(team)
         db.session.flush()  # Get the team ID
@@ -646,6 +642,7 @@ def edit_team(team_id):
     if form.validate_on_submit():
         team.name = form.name.data
         team.description = form.description.data
+        team.avatar_url = form.avatar_url.data
         team.is_public = form.is_public.data
         team.max_members = form.max_members.data
         team.updated_at = datetime.now()
