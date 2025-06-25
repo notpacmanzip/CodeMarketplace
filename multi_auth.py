@@ -217,7 +217,7 @@ def oauth_logged_in(blueprint, token):
             blueprint.token = token
             next_url = session.pop("next_url", None)
             flash(f'Successfully logged in!', 'success')
-            return redirect(next_url or url_for('dashboard'))
+            return redirect(next_url or url_for('home'))
         else:
             flash('Failed to create user account.', 'error')
             return redirect(url_for('index'))

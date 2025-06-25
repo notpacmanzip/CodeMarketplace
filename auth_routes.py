@@ -1,10 +1,19 @@
-from flask import render_template, redirect, url_for, flash, session
+import uuid
+from flask import render_template, redirect, url_for, flash, session, g
 from flask_login import current_user, logout_user
 from app import app
 from multi_auth import create_oauth_blueprints, logout_all_providers, require_login
 
 # Create and register OAuth blueprints
 oauth_blueprints = create_oauth_blueprints()
+
+# Global session setup for all OAuth providers
+@app.before_request
+def setup_oauth_session():
+    if '_browser_session_key' not in session:
+        session['_browser_session_key'] = uuid.uuid4().hex
+    session.modified = True
+    g.browser_session_key = session['_browser_session_key']
 
 # Register blueprints with the app
 for name, blueprint in oauth_blueprints.items():
@@ -37,7 +46,7 @@ def login_with_provider(provider):
     blueprint = oauth_blueprints[provider]
     
     # Store the next URL in session
-    next_url = session.get('next_url', url_for('dashboard'))
+    next_url = session.get('next_url', url_for('home'))
     session['next_url'] = next_url
     
     if provider == 'replit':
