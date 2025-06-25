@@ -770,29 +770,7 @@ def collaborative_editor(project_id):
     return render_template('collaboration/editor.html', project=project, session=active_session)
 
 
-@app.route('/projects/<int:project_id>/repositories/create', methods=['GET', 'POST'])
-@require_login
-def create_repository(project_id):
-    """Create a new repository for project"""
-    project = Project.query.get_or_404(project_id)
-    form = RepositoryForm()
-    
-    if form.validate_on_submit():
-        repository = Repository(
-            project_id=project_id,
-            name=form.name.data,
-            description=form.description.data,
-            visibility=form.visibility.data,
-            language=form.language.data
-        )
-        
-        db.session.add(repository)
-        db.session.commit()
-        
-        flash('Repository created successfully!', 'success')
-        return redirect(url_for('project_detail', project_id=project_id))
-    
-    return render_template('repository/create.html', form=form, project=project)
+# Repository creation route moved to collaboration_routes.py
 
 
 # API Routes for collaborative features
@@ -844,72 +822,13 @@ def send_chat_message():
     return jsonify({'success': False})
 
 
-# Repository and File Management Routes
-@app.route('/repositories/<int:repo_id>')
-def repository_detail(repo_id):
-    """View repository details and files"""
-    repository = Repository.query.get_or_404(repo_id)
-    return render_template('repository/detail.html', repository=repository)
+# Repository detail route moved to collaboration_routes.py
 
 
-@app.route('/repositories/<int:repo_id>/files/new', methods=['GET', 'POST'])
-@app.route('/repositories/<int:repo_id>/files/<int:file_id>/edit', methods=['GET', 'POST'])
-@require_login
-def edit_file(repo_id, file_id=None):
-    """Create or edit a file in repository"""
-    repository = Repository.query.get_or_404(repo_id)
-    file = RepositoryFile.query.get(file_id) if file_id else None
-    
-    # Check access permissions
-    project = repository.project
-    is_contributor = ProjectContributor.query.filter_by(
-        project_id=project.id, 
-        user_id=current_user.id
-    ).first()
-    
-    is_team_member = TeamMember.query.filter_by(
-        team_id=project.team_id,
-        user_id=current_user.id
-    ).first()
-    
-    if not (is_contributor or is_team_member):
-        flash('You do not have access to edit files in this repository.', 'error')
-        return redirect(url_for('repository_detail', repo_id=repo_id))
-    
-    form = FileForm(obj=file)
-    
-    # Pre-fill filename from query parameter for new files
-    if not file and request.args.get('filename'):
-        form.filename.data = request.args.get('filename')
-        form.filepath.data = request.args.get('filename')
-    
-    if form.validate_on_submit():
-        if not file:
-            file = RepositoryFile(repository_id=repo_id)
-        
-        file.filename = form.filename.data
-        file.filepath = form.filepath.data or form.filename.data
-        file.content = form.content.data
-        file.language = form.language.data
-        file.size = len(form.content.data.encode('utf-8'))
-        
-        db.session.add(file)
-        db.session.commit()
-        
-        flash('File saved successfully!', 'success')
-        return redirect(url_for('edit_file', repo_id=repo_id, file_id=file.id))
-    
-    return render_template('repository/file_editor.html', 
-                         repository=repository, 
-                         file=file, 
-                         form=form)
+# File editing routes moved to collaboration_routes.py
 
 
-@app.route('/repositories/<int:repo_id>/files/create', methods=['GET', 'POST'])
-@require_login
-def create_file(repo_id):
-    """Create a new file in repository"""
-    return edit_file(repo_id, None)
+# File creation route moved to collaboration_routes.py
 
 
 @app.route('/api/files/<int:file_id>', methods=['DELETE'])
@@ -934,20 +853,7 @@ def delete_file_api(file_id):
     return jsonify({'success': True, 'message': 'File deleted'})
 
 
-@app.route('/repositories/<int:repo_id>/share')
-@require_login
-def share_repository(repo_id):
-    """Share repository with others"""
-    repository = Repository.query.get_or_404(repo_id)
-    
-    # Generate shareable link based on visibility
-    if repository.visibility == 'public':
-        share_url = url_for('repository_detail', repo_id=repo_id, _external=True)
-    else:
-        # For private repos, could generate time-limited tokens
-        share_url = f"Repository '{repository.name}' is private. Add collaborators to your team to share access."
-    
-    return render_template('repository/share.html', repository=repository, share_url=share_url)
+# Repository sharing route moved to collaboration_routes.py
 
 
 # Additional API endpoints for project management
@@ -1041,7 +947,7 @@ import collaboration_routes
 # Initialize default data when the app starts
 with app.app_context():
     create_default_data()
-    forum_routes.create_default_forum_data()
+    # Forum data initialization handled elsewhere
 
 # Error handlers
 @app.errorhandler(404)

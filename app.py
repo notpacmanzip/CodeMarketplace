@@ -34,5 +34,7 @@ db.init_app(app)
 # Create tables
 with app.app_context():
     import models  # noqa: F401
+    import forum_models  # noqa: F401
+    import collaboration_models  # noqa: F401
     db.create_all()
     logging.info("Database tables created")

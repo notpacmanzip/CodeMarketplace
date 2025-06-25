@@ -3,6 +3,7 @@ from app import db
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from flask_login import UserMixin
 from sqlalchemy import UniqueConstraint
+import json
 
 # (IMPORTANT) This table is mandatory for Replit Auth, don't drop it.
 class User(UserMixin, db.Model):
@@ -436,7 +437,4 @@ class Notification(db.Model):
     user = db.relationship('User', backref='notifications')
 
 
-# Import forum and collaboration models
-from forum_models import ForumCategory, ForumTopic, ForumReply, ForumVote
-from collaboration_models import (CodeRepository, CodeFile, CodeCommit, LiveCodingSession, 
-                                LiveSessionParticipant, CodeChange, CodeModule)
+# Models are imported in app.py to avoid circular imports

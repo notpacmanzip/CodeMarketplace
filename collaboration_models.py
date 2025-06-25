@@ -74,7 +74,7 @@ class CodeCommit(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     
     # Relationships
-    author = db.relationship('User', backref='commits')
+    author = db.relationship('User', backref='code_commits')
 
 class LiveCodingSession(db.Model):
     __tablename__ = 'live_coding_sessions'
@@ -96,10 +96,10 @@ class LiveCodingSession(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
     # Relationships
-    host = db.relationship('User', backref='hosted_sessions')
+    host = db.relationship('User', backref='hosted_live_sessions')
     project = db.relationship('Project', backref='live_sessions')
     active_file = db.relationship('CodeFile', backref='active_sessions')
-    participants = db.relationship('LiveSessionParticipant', backref='session', lazy=True, cascade='all, delete-orphan')
+    participants = db.relationship('LiveSessionParticipant', backref='live_session', lazy=True, cascade='all, delete-orphan')
 
 class LiveSessionParticipant(db.Model):
     __tablename__ = 'live_session_participants'
@@ -117,7 +117,7 @@ class LiveSessionParticipant(db.Model):
     last_activity = db.Column(db.DateTime, default=datetime.now)
     
     # Relationships
-    user = db.relationship('User', backref='session_participations')
+    user = db.relationship('User', backref='live_session_participations')
 
 class CodeChange(db.Model):
     __tablename__ = 'code_changes'
@@ -145,9 +145,9 @@ class CodeChange(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     
     # Relationships
-    file = db.relationship('CodeFile', backref='changes')
-    session = db.relationship('LiveCodingSession', backref='changes')
-    user = db.relationship('User', backref='code_changes')
+    file = db.relationship('CodeFile', backref='code_file_changes')
+    session = db.relationship('LiveCodingSession', backref='code_changes')
+    user = db.relationship('User', backref='authored_code_changes')
 
 class CodeModule(db.Model):
     __tablename__ = 'code_modules'
@@ -179,6 +179,6 @@ class CodeModule(db.Model):
     updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
     # Relationships
-    author = db.relationship('User', backref='code_modules')
-    project = db.relationship('Project', backref='modules')
-    repository = db.relationship('CodeRepository', backref='modules')
+    author = db.relationship('User', backref='authored_code_modules')
+    project = db.relationship('Project', backref='code_modules')
+    repository = db.relationship('CodeRepository', backref='code_modules')
