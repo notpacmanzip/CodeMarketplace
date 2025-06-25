@@ -156,12 +156,12 @@ def forum_create_topic(category_id=None):
         flash('Topic created successfully!', 'success')
         return redirect(url_for('forum_topic', topic_id=topic.id))
     
-    return render_template('forum/create_topic.html', form=form, category_id=category_id)
+    return render_template('forum/create_topic.html', form=form, categories=categories)
 
 
 @app.route('/forum/topic/<int:topic_id>/reply', methods=['POST'])
 @require_login
-def create_forum_reply(topic_id):
+def forum_create_reply(topic_id):
     """Create a reply to a forum topic"""
     topic = ForumTopic.query.get_or_404(topic_id)
     

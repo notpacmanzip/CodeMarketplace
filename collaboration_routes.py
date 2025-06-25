@@ -100,10 +100,13 @@ def repository_detail(repo_id):
         repository_id=repo_id
     ).order_by(desc(CodeCommit.created_at)).limit(10).all()
     
+    # Check if user can edit
+    can_edit = (repository.owner_id == current_user.id or 
+                current_user.user_type == 'admin')
+    
     return render_template('collaboration/repository_detail.html', 
                          repository=repository, 
-                         files=files,
-                         recent_commits=recent_commits)
+                         can_edit=can_edit)
 
 
 @app.route('/repositories/<int:repo_id>/files/create', methods=['GET', 'POST'])
