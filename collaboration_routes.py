@@ -177,7 +177,7 @@ def create_file(repo_id):
     
     form = CodeFileForm()
     
-    if form.validate_on_submit():
+    if request.method == 'POST' and form.validate_on_submit():
         # Check for duplicate file path
         existing_file = CodeFile.query.filter_by(
             repository_id=repo_id,
@@ -187,8 +187,8 @@ def create_file(repo_id):
         
         if existing_file:
             flash('A file with this path already exists.', 'error')
-            return render_template('collaboration/create_file.html', 
-                                 form=form, repository=repository)
+            return render_template('repository/file_editor.html', 
+                                 form=form, repository=repository, file=None)
         
         # Auto-detect language if not specified
         language = form.language.data
@@ -203,15 +203,18 @@ def create_file(repo_id):
             }
             language = language_map.get(file_ext, 'other')
         
+        from datetime import datetime
+        content = form.content.data or ''
         file = CodeFile(
             filename=form.filename.data,
             file_path=form.file_path.data,
-            content=form.content.data,
+            content=content,
             language=language,
-            file_size=len(form.content.data.encode('utf-8')),
+            file_size=len(content.encode('utf-8')),
             repository_id=repo_id,
             last_modified_by=current_user.id
         )
+        file.updated_at = datetime.now()
         
         db.session.add(file)
         db.session.commit()
@@ -219,7 +222,7 @@ def create_file(repo_id):
         flash('File created successfully!', 'success')
         return redirect(url_for('file_detail', file_id=file.id))
     
-    return render_template('collaboration/create_file.html', 
+    return render_template('repository/create_file.html', 
                          form=form, repository=repository)
 
 
