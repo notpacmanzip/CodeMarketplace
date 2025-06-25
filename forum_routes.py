@@ -73,9 +73,17 @@ def forum_category(category_id):
     page = request.args.get('page', 1, type=int)
     topics = topics_query.paginate(page=page, per_page=20, error_out=False)
     
+    # Get related categories (same parent or similar topics)
+    related_categories = ForumCategory.query.filter(
+        ForumCategory.id != category_id,
+        ForumCategory.is_active == True
+    ).limit(5).all()
+    
     return render_template('forum/category.html', 
                          category=category, 
-                         topics=topics,
+                         topics=topics.items,
+                         pagination=topics,
+                         related_categories=related_categories,
                          search_form=search_form)
 
 
@@ -86,8 +94,20 @@ def forum_topic(topic_id):
     
     # Increment view count (only if not the author)
     if not current_user.is_authenticated or current_user.id != topic.author_id:
-        topic.views_count += 1
+        if not hasattr(topic, 'view_count'):
+            topic.view_count = 0
+        topic.view_count += 1
         db.session.commit()
+    
+    # Get related topics from same category
+    related_topics = ForumTopic.query.filter(
+        ForumTopic.category_id == topic.category_id,
+        ForumTopic.id != topic_id
+    ).order_by(desc(ForumTopic.created_at)).limit(5).all()
+    
+    # Reply form
+    from forum_forms import ForumReplyForm
+    reply_form = ForumReplyForm()
     
     # Get replies with pagination
     page = request.args.get('page', 1, type=int)
@@ -100,14 +120,14 @@ def forum_topic(topic_id):
     
     return render_template('forum/topic.html', 
                          topic=topic, 
-                         replies=replies,
+                         related_topics=related_topics,
                          reply_form=reply_form)
 
 
 @app.route('/forum/create-topic', methods=['GET', 'POST'])
 @app.route('/forum/create-topic/<int:category_id>', methods=['GET', 'POST'])
 @require_login
-def create_forum_topic(category_id=None):
+def forum_create_topic(category_id=None):
     """Create a new forum topic"""
     form = ForumTopicForm()
     

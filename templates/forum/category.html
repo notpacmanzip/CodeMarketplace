@@ -1,0 +1,258 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - Forum{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Category Header -->
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                         style="width: 48px; height: 48px; background-color: {{ category.color }};">
+                        <i class="{{ category.icon }} text-white"></i>
+                    </div>
+                    <div>
+                        <h2 class="mb-0">{{ category.name }}</h2>
+                        <p class="text-muted mb-0">{{ category.description }}</p>
+                    </div>
+                </div>
+                <a href="{{ url_for('forum_create_topic', category_id=category.id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> New Post
+                </a>
+            </div>
+
+            <!-- Sort Options -->
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div class="btn-group" role="group">
+                    <input type="radio" class="btn-check" name="sort" id="sort-hot" autocomplete="off" checked>
+                    <label class="btn btn-outline-primary btn-sm" for="sort-hot">🔥 Hot</label>
+
+                    <input type="radio" class="btn-check" name="sort" id="sort-new" autocomplete="off">
+                    <label class="btn btn-outline-primary btn-sm" for="sort-new">🆕 New</label>
+
+                    <input type="radio" class="btn-check" name="sort" id="sort-top" autocomplete="off">
+                    <label class="btn btn-outline-primary btn-sm" for="sort-top">⬆️ Top</label>
+                </div>
+                <small class="text-muted">{{ topics|length }} posts</small>
+            </div>
+
+            <!-- Topics List -->
+            {% if topics %}
+                {% for topic in topics %}
+                <div class="card mb-3 border-0 shadow-sm topic-card">
+                    <div class="card-body p-3">
+                        <div class="row">
+                            <!-- Vote Section -->
+                            <div class="col-auto d-flex flex-column align-items-center">
+                                <button class="btn btn-link p-0 vote-btn text-muted" data-vote="up" data-topic="{{ topic.id }}">
+                                    <i class="fas fa-chevron-up"></i>
+                                </button>
+                                <span class="vote-count fw-bold" style="font-size: 14px;">{{ topic.vote_score or 0 }}</span>
+                                <button class="btn btn-link p-0 vote-btn text-muted" data-vote="down" data-topic="{{ topic.id }}">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+
+                            <!-- Content Section -->
+                            <div class="col">
+                                <div class="d-flex align-items-start">
+                                    <div class="flex-grow-1">
+                                        <h5 class="mb-2">
+                                            <a href="{{ url_for('forum_topic', topic_id=topic.id) }}" 
+                                               class="text-decoration-none text-dark topic-title">
+                                                {{ topic.title }}
+                                            </a>
+                                            {% if topic.is_solved %}
+                                                <span class="badge bg-success ms-2">✓ Solved</span>
+                                            {% endif %}
+                                            {% if topic.is_pinned %}
+                                                <span class="badge bg-warning ms-2">📌 Pinned</span>
+                                            {% endif %}
+                                        </h5>
+                                        <p class="text-muted mb-2" style="font-size: 14px;">
+                                            {{ topic.content[:150] }}{% if topic.content|length > 150 %}...{% endif %}
+                                        </p>
+                                        <div class="d-flex align-items-center gap-3 text-muted" style="font-size: 12px;">
+                                            <span>
+                                                <i class="fas fa-user"></i>
+                                                {{ topic.author.full_name() }}
+                                            </span>
+                                            <span>
+                                                <i class="fas fa-clock"></i>
+                                                {{ topic.created_at.strftime('%m/%d/%Y %H:%M') }}
+                                            </span>
+                                            <span>
+                                                <i class="fas fa-comments"></i>
+                                                {{ topic.replies|length }} comments
+                                            </span>
+                                            {% if topic.tags %}
+                                                <div class="d-flex gap-1">
+                                                    {% for tag in topic.tags.split(',')[:3] %}
+                                                        <span class="badge bg-light text-dark">{{ tag.strip() }}</span>
+                                                    {% endfor %}
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                <!-- Pagination -->
+                {% if pagination and pagination.pages > 1 %}
+                <nav aria-label="Topics pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if pagination.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('forum_category', category_id=category.id, page=pagination.prev_num) }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in pagination.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != pagination.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('forum_category', category_id=category.id, page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if pagination.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('forum_category', category_id=category.id, page=pagination.next_num) }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-comments fa-3x text-muted mb-3"></i>
+                    <h4>No posts yet</h4>
+                    <p class="text-muted mb-4">Be the first to start a discussion in this category!</p>
+                    <a href="{{ url_for('forum_create_topic', category_id=category.id) }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create First Post
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Category Rules -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Community Guidelines</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0" style="font-size: 14px;">
+                        <li class="mb-2">• Be respectful and constructive</li>
+                        <li class="mb-2">• Search before posting</li>
+                        <li class="mb-2">• Use clear, descriptive titles</li>
+                        <li class="mb-2">• Include code examples when relevant</li>
+                        <li>• Mark solutions when found</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Related Categories -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Related Categories</h6>
+                </div>
+                <div class="card-body">
+                    {% for related_cat in related_categories %}
+                    <a href="{{ url_for('forum_category', category_id=related_cat.id) }}" 
+                       class="d-flex align-items-center text-decoration-none mb-2">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-2" 
+                             style="width: 24px; height: 24px; background-color: {{ related_cat.color }};">
+                            <i class="{{ related_cat.icon }} text-white" style="font-size: 10px;"></i>
+                        </div>
+                        <span class="text-dark">{{ related_cat.name }}</span>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.topic-card {
+    transition: all 0.2s ease;
+    border-left: 3px solid transparent !important;
+}
+
+.topic-card:hover {
+    border-left-color: {{ category.color }} !important;
+    transform: translateX(2px);
+}
+
+.topic-title:hover {
+    color: {{ category.color }} !important;
+}
+
+.vote-btn:hover {
+    color: {{ category.color }} !important;
+}
+
+.vote-btn.active {
+    color: {{ category.color }} !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Vote functionality
+    document.querySelectorAll('.vote-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const topicId = this.dataset.topic;
+            const voteType = this.dataset.vote;
+            
+            fetch(`/forum/vote`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    topic_id: topicId,
+                    vote_type: voteType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const countEl = this.parentElement.querySelector('.vote-count');
+                    countEl.textContent = data.new_score;
+                    
+                    // Update button states
+                    this.parentElement.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('active'));
+                    if (data.user_vote) {
+                        this.classList.add('active');
+                    }
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}

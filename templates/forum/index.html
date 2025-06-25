@@ -1,53 +1,48 @@
 {% extends "base.html" %}
 
-{% block title %}Community Forum{% endblock %}
+{% block title %}DevMarket Forum{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <!-- Forum Header -->
+<div class="container-fluid mt-4">
+    <!-- Header -->
     <div class="row mb-4">
         <div class="col-12">
             <div class="d-flex justify-content-between align-items-center">
                 <div>
-                    <h1>Community Forum</h1>
-                    <p class="text-muted">Share knowledge, get help, and collaborate with the community</p>
+                    <h2 class="mb-1">DevMarket Community</h2>
+                    <p class="text-muted mb-0">Join the conversation with fellow developers</p>
                 </div>
-                <div>
-                    {% if current_user.is_authenticated %}
-                        <a href="{{ url_for('create_forum_topic') }}" class="btn btn-primary">
-                            <i class="fas fa-plus"></i> New Topic
-                        </a>
-                    {% endif %}
-                    <a href="{{ url_for('forum_search') }}" class="btn btn-outline-secondary">
-                        <i class="fas fa-search"></i> Search
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('forum_create_topic') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create Post
                     </a>
-                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 
-    <!-- Forum Statistics -->
+    <!-- Forum Stats -->
     <div class="row mb-4">
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="text-primary">{{ stats.total_topics }}</h4>
-                    <small class="text-muted">Topics</small>
+                    <div class="fs-3 fw-bold text-primary">{{ stats.total_topics }}</div>
+                    <small class="text-muted">Total Posts</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="text-success">{{ stats.total_replies }}</h4>
-                    <small class="text-muted">Replies</small>
+                    <div class="fs-3 fw-bold text-success">{{ stats.total_replies }}</div>
+                    <small class="text-muted">Comments</small>
                 </div>
             </div>
         </div>
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="text-info">{{ stats.total_users }}</h4>
+                    <div class="fs-3 fw-bold text-info">{{ stats.total_users }}</div>
                     <small class="text-muted">Members</small>
                 </div>
             </div>
@@ -55,7 +50,7 @@
         <div class="col-md-3">
             <div class="card text-center">
                 <div class="card-body">
-                    <h4 class="text-warning">{{ stats.solved_topics }}</h4>
+                    <div class="fs-3 fw-bold text-warning">{{ stats.solved_topics }}</div>
                     <small class="text-muted">Solved</small>
                 </div>
             </div>
@@ -64,106 +59,105 @@
 
     <div class="row">
         <!-- Categories -->
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Forum Categories</h5>
-                </div>
-                <div class="card-body p-0">
-                    {% for category in categories %}
-                    <div class="p-3 border-bottom">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <i class="{{ category.icon }} fa-2x" style="color: {{ category.color }}"></i>
+        <div class="col-lg-8">
+            <h4 class="mb-3">Categories</h4>
+            <div class="row">
+                {% for category in categories %}
+                <div class="col-md-6 mb-3">
+                    <div class="card h-100 category-card" style="border-left: 4px solid {{ category.color }};">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                                     style="width: 48px; height: 48px; background-color: {{ category.color }};">
+                                    <i class="{{ category.icon }} text-white"></i>
+                                </div>
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">
+                                        <a href="{{ url_for('forum_category', category_id=category.id) }}" 
+                                           class="text-decoration-none text-dark category-link">{{ category.name }}</a>
+                                    </h6>
+                                    <small class="text-muted">{{ category.description }}</small>
+                                </div>
                             </div>
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">
-                                    <a href="{{ url_for('forum_category', category_id=category.id) }}" 
-                                       class="text-decoration-none">
-                                        {{ category.name }}
-                                    </a>
-                                </h6>
-                                <p class="text-muted mb-0 small">{{ category.description }}</p>
-                            </div>
-                            <div class="text-end">
-                                <small class="text-muted">
-                                    {{ category.topics|length }} topics
-                                </small>
+                            
+                            <div class="d-flex justify-content-between text-muted small">
+                                <span><i class="fas fa-comments"></i> {{ category.topic_count or 0 }} posts</span>
+                                <span><i class="fas fa-reply"></i> {{ category.reply_count or 0 }} replies</span>
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
                 </div>
+                {% endfor %}
             </div>
         </div>
 
-        <!-- Recent Activity -->
-        <div class="col-md-4">
-            <div class="card">
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Recent Activity -->
+            <div class="card mb-4">
                 <div class="card-header">
-                    <h6 class="mb-0">Recent Topics</h6>
+                    <h6 class="mb-0">🔥 Hot Topics</h6>
                 </div>
-                <div class="card-body p-0">
-                    {% for topic in recent_topics %}
-                    <div class="p-3 border-bottom">
-                        <div class="d-flex">
-                            <div class="flex-grow-1">
-                                <h6 class="mb-1">
-                                    <a href="{{ url_for('forum_topic', topic_id=topic.id) }}" 
-                                       class="text-decoration-none">
-                                        {{ topic.title|truncate(50) }}
-                                    </a>
-                                </h6>
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <small class="text-muted">
-                                        by {{ topic.author.full_name }}
-                                    </small>
-                                    <div class="d-flex gap-2">
-                                        {% if topic.is_solved %}
-                                            <span class="badge bg-success">Solved</span>
-                                        {% endif %}
-                                        {% if topic.is_pinned %}
-                                            <span class="badge bg-warning">Pinned</span>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                                <small class="text-muted">
-                                    {{ topic.created_at.strftime('%b %d, %Y') }}
-                                </small>
-                            </div>
+                <div class="card-body">
+                    {% for topic in recent_topics[:5] %}
+                    <div class="d-flex align-items-start mb-3 pb-3 border-bottom">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center me-3" 
+                             style="width: 32px; height: 32px; background-color: {{ topic.category.color }};">
+                            <i class="{{ topic.category.icon }} text-white" style="font-size: 12px;"></i>
                         </div>
-                    </div>
-                    {% else %}
-                    <div class="p-3 text-center text-muted">
-                        <i class="fas fa-comments fa-2x mb-2"></i>
-                        <p>No topics yet. Be the first to start a discussion!</p>
+                        <div class="flex-grow-1">
+                            <a href="{{ url_for('forum_topic', topic_id=topic.id) }}" 
+                               class="text-decoration-none text-dark">
+                                <div class="fw-semibold" style="font-size: 14px;">{{ topic.title[:50] }}{% if topic.title|length > 50 %}...{% endif %}</div>
+                            </a>
+                            <small class="text-muted">
+                                {{ topic.author.full_name() }} • {{ topic.created_at.strftime('%m/%d') }}
+                            </small>
+                        </div>
+                        <div class="text-center">
+                            <div class="fw-bold text-primary" style="font-size: 12px;">{{ topic.replies|length }}</div>
+                            <small class="text-muted">replies</small>
+                        </div>
                     </div>
                     {% endfor %}
                 </div>
             </div>
 
-            <!-- Quick Actions -->
-            {% if current_user.is_authenticated %}
-            <div class="card mt-3">
+            <!-- Forum Guidelines -->
+            <div class="card">
                 <div class="card-header">
-                    <h6 class="mb-0">Quick Actions</h6>
+                    <h6 class="mb-0">📝 Community Guidelines</h6>
                 </div>
                 <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="{{ url_for('create_forum_topic') }}" class="btn btn-primary btn-sm">
-                            <i class="fas fa-plus"></i> Ask Question
-                        </a>
-                        <a href="{{ url_for('create_forum_topic', category_id=3) }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-code"></i> Share Code
-                        </a>
-                        <a href="{{ url_for('create_forum_topic', category_id=4) }}" class="btn btn-outline-primary btn-sm">
-                            <i class="fas fa-rocket"></i> Show Project
-                        </a>
-                    </div>
+                    <ul class="list-unstyled mb-0" style="font-size: 14px;">
+                        <li class="mb-2">• Be respectful and professional</li>
+                        <li class="mb-2">• Search before posting</li>
+                        <li class="mb-2">• Use descriptive titles</li>
+                        <li class="mb-2">• Include code examples</li>
+                        <li class="mb-2">• Mark solutions when found</li>
+                        <li>• Help others when you can</li>
+                    </ul>
                 </div>
             </div>
-            {% endif %}
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.category-card {
+    transition: all 0.2s ease;
+    border: 1px solid #dee2e6;
+}
+
+.category-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.category-link:hover {
+    color: var(--bs-primary) !important;
+}
+</style>
 {% endblock %}

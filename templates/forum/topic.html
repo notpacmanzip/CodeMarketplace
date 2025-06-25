@@ -1,0 +1,308 @@
+{% extends "base.html" %}
+
+{% block title %}{{ topic.title }} - Forum{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-8">
+            <!-- Breadcrumb -->
+            <nav aria-label="breadcrumb" class="mb-3">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('forum_index') }}">Forum</a></li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('forum_category', category_id=topic.category.id) }}">{{ topic.category.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ topic.title }}</li>
+                </ol>
+            </nav>
+
+            <!-- Original Post -->
+            <div class="card mb-4 border-0 shadow">
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Vote Section -->
+                        <div class="col-auto d-flex flex-column align-items-center">
+                            <button class="btn btn-link p-0 vote-btn text-muted" data-vote="up" data-topic="{{ topic.id }}">
+                                <i class="fas fa-chevron-up fa-lg"></i>
+                            </button>
+                            <span class="vote-count fw-bold fs-5 my-2">{{ topic.vote_score or 0 }}</span>
+                            <button class="btn btn-link p-0 vote-btn text-muted" data-vote="down" data-topic="{{ topic.id }}">
+                                <i class="fas fa-chevron-down fa-lg"></i>
+                            </button>
+                        </div>
+
+                        <!-- Content Section -->
+                        <div class="col">
+                            <div class="d-flex align-items-start justify-content-between mb-3">
+                                <div>
+                                    <h2 class="mb-2">{{ topic.title }}</h2>
+                                    <div class="d-flex align-items-center gap-3 text-muted">
+                                        <span>
+                                            <i class="fas fa-user"></i>
+                                            {{ topic.author.full_name() }}
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-clock"></i>
+                                            {{ topic.created_at.strftime('%B %d, %Y at %H:%M') }}
+                                        </span>
+                                        <span>
+                                            <i class="fas fa-eye"></i>
+                                            {{ topic.view_count or 0 }} views
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    {% if topic.is_solved %}
+                                        <span class="badge bg-success">✓ Solved</span>
+                                    {% endif %}
+                                    {% if topic.is_pinned %}
+                                        <span class="badge bg-warning">📌 Pinned</span>
+                                    {% endif %}
+                                    {% if current_user.is_authenticated and (current_user.id == topic.author_id or current_user.user_type == 'admin') %}
+                                        <div class="dropdown">
+                                            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-h"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#"><i class="fas fa-edit"></i> Edit</a></li>
+                                                <li><a class="dropdown-item" href="#"><i class="fas fa-thumbtack"></i> Pin</a></li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash"></i> Delete</a></li>
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            <div class="topic-content mb-3">
+                                {{ topic.content|nl2br|safe }}
+                            </div>
+
+                            {% if topic.tags %}
+                            <div class="d-flex gap-2 mb-3">
+                                {% for tag in topic.tags.split(',') %}
+                                    <span class="badge bg-light text-dark">{{ tag.strip() }}</span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+
+                            <div class="d-flex align-items-center justify-content-between">
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-reply"></i> Reply
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-share"></i> Share
+                                    </button>
+                                    <button class="btn btn-outline-secondary btn-sm">
+                                        <i class="fas fa-bookmark"></i> Save
+                                    </button>
+                                </div>
+                                <small class="text-muted">{{ topic.replies|length }} replies</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Replies -->
+            <div class="mb-4">
+                <h5 class="mb-3">
+                    {{ topic.replies|length }} Comment{{ 's' if topic.replies|length != 1 else '' }}
+                </h5>
+
+                {% for reply in topic.replies %}
+                <div class="card mb-3 border-0" style="margin-left: 20px;">
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Vote Section -->
+                            <div class="col-auto d-flex flex-column align-items-center">
+                                <button class="btn btn-link p-0 vote-btn text-muted" data-vote="up" data-reply="{{ reply.id }}">
+                                    <i class="fas fa-chevron-up"></i>
+                                </button>
+                                <span class="vote-count fw-bold">{{ reply.vote_score or 0 }}</span>
+                                <button class="btn btn-link p-0 vote-btn text-muted" data-vote="down" data-reply="{{ reply.id }}">
+                                    <i class="fas fa-chevron-down"></i>
+                                </button>
+                            </div>
+
+                            <!-- Content Section -->
+                            <div class="col">
+                                <div class="d-flex align-items-center justify-content-between mb-2">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <strong>{{ reply.author.full_name() }}</strong>
+                                        <small class="text-muted">{{ reply.created_at.strftime('%m/%d/%Y %H:%M') }}</small>
+                                        {% if reply.is_solution %}
+                                            <span class="badge bg-success">✓ Solution</span>
+                                        {% endif %}
+                                    </div>
+                                    {% if current_user.is_authenticated %}
+                                        <div class="dropdown">
+                                            <button class="btn btn-link btn-sm text-muted" data-bs-toggle="dropdown">
+                                                <i class="fas fa-ellipsis-h"></i>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#"><i class="fas fa-reply"></i> Reply</a></li>
+                                                {% if current_user.id == topic.author_id and not topic.is_solved %}
+                                                    <li><a class="dropdown-item" href="#"><i class="fas fa-check"></i> Mark as Solution</a></li>
+                                                {% endif %}
+                                                {% if current_user.id == reply.author_id %}
+                                                    <li><a class="dropdown-item" href="#"><i class="fas fa-edit"></i> Edit</a></li>
+                                                    <li><hr class="dropdown-divider"></li>
+                                                    <li><a class="dropdown-item text-danger" href="#"><i class="fas fa-trash"></i> Delete</a></li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="reply-content">
+                                    {{ reply.content|nl2br|safe }}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <!-- Reply Form -->
+            {% if current_user.is_authenticated %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Add a Comment</h6>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('forum_create_reply', topic_id=topic.id) }}">
+                        {{ reply_form.hidden_tag() }}
+                        <div class="mb-3">
+                            {{ reply_form.content(class="form-control", rows="4", placeholder="Share your thoughts...") }}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">Markdown formatting supported</small>
+                            {{ reply_form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-body text-center">
+                    <p class="mb-3">Join the discussion</p>
+                    <a href="{{ url_for('login') }}" class="btn btn-primary">Login to Reply</a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Topic Stats -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Topic Stats</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="fs-4 fw-bold text-primary">{{ topic.vote_score or 0 }}</div>
+                            <small class="text-muted">Score</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fs-4 fw-bold text-success">{{ topic.replies|length }}</div>
+                            <small class="text-muted">Replies</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fs-4 fw-bold text-info">{{ topic.view_count or 0 }}</div>
+                            <small class="text-muted">Views</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Info -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">About {{ topic.category.name }}</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ topic.category.description }}</p>
+                </div>
+            </div>
+
+            <!-- Related Topics -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Related Topics</h6>
+                </div>
+                <div class="card-body">
+                    {% for related in related_topics %}
+                    <a href="{{ url_for('forum_topic', topic_id=related.id) }}" 
+                       class="d-block text-decoration-none mb-2">
+                        <div class="text-dark">{{ related.title }}</div>
+                        <small class="text-muted">{{ related.replies|length }} replies</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.topic-content, .reply-content {
+    line-height: 1.6;
+}
+
+.vote-btn:hover {
+    color: #007bff !important;
+}
+
+.vote-btn.active {
+    color: #007bff !important;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Vote functionality
+    document.querySelectorAll('.vote-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const topicId = this.dataset.topic;
+            const replyId = this.dataset.reply;
+            const voteType = this.dataset.vote;
+            
+            fetch(`/forum/vote`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    topic_id: topicId,
+                    reply_id: replyId,
+                    vote_type: voteType
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const countEl = this.parentElement.querySelector('.vote-count');
+                    countEl.textContent = data.new_score;
+                    
+                    // Update button states
+                    this.parentElement.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('active'));
+                    if (data.user_vote) {
+                        this.classList.add('active');
+                    }
+                }
+            });
+        });
+    });
+});
+</script>
+{% endblock %}
