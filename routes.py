@@ -40,19 +40,13 @@ def index():
     featured_products = Product.query.filter_by(is_featured=True, is_active=True, status='approved').limit(6).all()
     categories = Category.query.all()
     
-    return render_template('index.html', featured_products=featured_products, categories=categories)
+    return render_template('welcome.html', featured_products=featured_products, categories=categories)
 
 @app.route('/home')
 @require_login
 def home():
-    """Home page for authenticated users"""
-    # Get recent products
-    recent_products = Product.query.filter_by(is_active=True, status='approved').order_by(desc(Product.created_at)).limit(8).all()
-    
-    # Get user's recent activity
-    user_purchases = Purchase.query.filter_by(buyer_id=current_user.id).order_by(desc(Purchase.created_at)).limit(5).all()
-    
-    return render_template('home.html', recent_products=recent_products, user_purchases=user_purchases)
+    """Legacy home page - redirect to collaborative dashboard"""
+    return redirect(url_for('collaborative_dashboard'))
 
 @app.route('/profile')
 @require_login

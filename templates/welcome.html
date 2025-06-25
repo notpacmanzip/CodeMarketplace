@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome to DevMarket{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Hero Section -->
+    <div class="row align-items-center mb-5">
+        <div class="col-lg-6">
+            <h1 class="display-4 fw-bold mb-4">Collaborative Coding Platform</h1>
+            <p class="lead mb-4">Build software together with teams, manage projects, and get paid for your contributions. The complete platform for collaborative development.</p>
+            <div class="d-flex gap-3">
+                <a href="{{ url_for('replit_auth.login') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Get Started
+                </a>
+                <a href="{{ url_for('teams_list') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-users me-2"></i>Browse Teams
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="text-center">
+                <i class="fas fa-code fa-10x text-primary mb-4"></i>
+                <h3>Code Together, Achieve More</h3>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">Platform Features</h2>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                    <h5>Team Collaboration</h5>
+                    <p class="text-muted">Create teams, manage members, and organize collaborative projects with role-based access control.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-code fa-3x text-success mb-3"></i>
+                    <h5>Real-time Coding</h5>
+                    <p class="text-muted">Collaborative code editor with live editing, chat, and synchronized development sessions.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 text-center">
+                <div class="card-body">
+                    <i class="fas fa-dollar-sign fa-3x text-warning mb-3"></i>
+                    <h5>Smart Payments</h5>
+                    <p class="text-muted">Milestone-based payments, contribution tracking, and automatic compensation distribution.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Demo Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card bg-dark text-light">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h3>Try Without Signing Up</h3>
+                            <p class="mb-0">Explore public teams and projects to see how collaborative development works on our platform.</p>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <a href="{{ url_for('projects_list') }}" class="btn btn-light me-2">
+                                <i class="fas fa-project-diagram me-1"></i>Browse Projects
+                            </a>
+                            <a href="{{ url_for('teams_list') }}" class="btn btn-outline-light">
+                                <i class="fas fa-users me-1"></i>View Teams
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if featured_products %}
+    <!-- Legacy Products Section -->
+    <div class="row">
+        <div class="col-12">
+            <h3 class="mb-4">Featured Products</h3>
+        </div>
+        {% for product in featured_products %}
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">{{ product.title }}</h5>
+                    <p class="card-text text-muted">{{ product.short_description[:80] }}...</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-primary">${{ "%.2f"|format(product.price) }}</span>
+                        <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-sm btn-outline-primary">View</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
