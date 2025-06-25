@@ -14,7 +14,6 @@ class CodeRepositoryForm(FlaskForm):
 class CodeFileForm(FlaskForm):
     filename = StringField('File Name', validators=[DataRequired(), Length(min=1, max=500)])
     file_path = StringField('File Path', validators=[DataRequired(), Length(min=1, max=1000)])
-    filepath = StringField('File Path', validators=[DataRequired(), Length(min=1, max=1000)])
     content = TextAreaField('File Content', validators=[Optional()])
     language = SelectField('Programming Language', choices=[
         ('', 'Auto-detect'),

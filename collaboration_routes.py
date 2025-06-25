@@ -187,8 +187,8 @@ def create_file(repo_id):
         
         if existing_file:
             flash('A file with this path already exists.', 'error')
-            return render_template('repository/file_editor.html', 
-                                 form=form, repository=repository, file=None)
+            return render_template('repository/create_file.html', 
+                                 form=form, repository=repository)
         
         # Auto-detect language if not specified
         language = form.language.data
@@ -205,6 +205,7 @@ def create_file(repo_id):
         
         from datetime import datetime
         content = form.content.data or ''
+        now = datetime.now()
         file = CodeFile(
             filename=form.filename.data,
             file_path=form.file_path.data,
@@ -212,9 +213,10 @@ def create_file(repo_id):
             language=language,
             file_size=len(content.encode('utf-8')),
             repository_id=repo_id,
-            last_modified_by=current_user.id
+            last_modified_by=current_user.id,
+            created_at=now,
+            updated_at=now
         )
-        file.updated_at = datetime.now()
         
         db.session.add(file)
         db.session.commit()

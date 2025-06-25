@@ -44,8 +44,8 @@ class CodeFile(db.Model):
     repository_id = db.Column(db.Integer, db.ForeignKey('code_repositories.id'), nullable=False)
     last_modified_by = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
     
-    created_at = db.Column(db.DateTime, default=datetime.now)
-    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    created_at = db.Column(db.DateTime, default=datetime.now, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now, nullable=False)
     
     # Relationships
     modifier = db.relationship('User', backref='modified_files')
