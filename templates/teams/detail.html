@@ -111,7 +111,7 @@
                             </div>
                         {% endif %}
                         <div class="flex-grow-1">
-                            <div class="fw-semibold">{{ member.user.full_name() or member.user.email }}</div>
+                            <div class="fw-semibold">{{ member.user.full_name() }}</div>
                             <small class="text-muted">{{ member.role.title() }}</small>
                         </div>
                         {% if member.role == 'owner' %}

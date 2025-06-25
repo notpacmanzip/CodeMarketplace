@@ -157,7 +157,7 @@
                 <div class="card-body">
                     <div class="mb-3">
                         <strong>Owner:</strong><br>
-                        <span class="text-muted">{{ project.owner.full_name() or project.owner.email }}</span>
+                        <span class="text-muted">{{ project.owner.full_name() }}</span>
                     </div>
                     <div class="mb-3">
                         <strong>Payment Model:</strong><br>
@@ -198,7 +198,7 @@
                             </div>
                         {% endif %}
                         <div class="flex-grow-1">
-                            <div class="fw-semibold">{{ contributor.user.full_name() or contributor.user.email }}</div>
+                            <div class="fw-semibold">{{ contributor.user.full_name() }}</div>
                             <small class="text-muted">{{ contributor.role.title() }}</small>
                         </div>
                         {% if contributor.hours_logged > 0 %}

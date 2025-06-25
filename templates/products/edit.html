@@ -1,197 +1,119 @@
 {% extends "base.html" %}
 
-{% block title %}Edit {{ product.title }} - DevMarket{% endblock %}
+{% block title %}Edit Product - {{ product.title }}{% endblock %}
 
 {% block content %}
-<div class="container py-4">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="card-title mb-0">
-                        <i class="fas fa-edit me-2"></i>Edit Product
-                    </h3>
+                    <h4 class="mb-0">Edit Product</h4>
+                    <small class="text-muted">Update your product information</small>
                 </div>
                 <div class="card-body">
                     <form method="POST" enctype="multipart/form-data">
                         {{ form.hidden_tag() }}
                         
                         <div class="mb-3">
-                            <label for="{{ form.title.id }}" class="form-label">{{ form.title.label.text }} <span class="text-danger">*</span></label>
+                            {{ form.title.label(class="form-label") }}
                             {{ form.title(class="form-control") }}
                             {% if form.title.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.title.errors %}{{ error }}{% endfor %}
+                                <div class="text-danger">
+                                    {% for error in form.title.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="mb-3">
-                            <label for="{{ form.short_description.id }}" class="form-label">{{ form.short_description.label.text }} <span class="text-danger">*</span></label>
-                            {{ form.short_description(class="form-control") }}
-                            {% if form.short_description.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.short_description.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.description.id }}" class="form-label">{{ form.description.label.text }} <span class="text-danger">*</span></label>
-                            {{ form.description(class="form-control", rows="8") }}
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows="5") }}
                             {% if form.description.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.description.errors %}{{ error }}{% endfor %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
-                        
+
                         <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.price.id }}" class="form-label">{{ form.price.label.text }} <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <span class="input-group-text">$</span>
-                                    {{ form.price(class="form-control") }}
-                                </div>
-                                {% if form.price.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.price.errors %}{{ error }}{% endfor %}
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.price.label(class="form-label") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text">$</span>
+                                        {{ form.price(class="form-control") }}
                                     </div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.category_id.id }}" class="form-label">{{ form.category_id.label.text }} <span class="text-danger">*</span></label>
-                                {{ form.category_id(class="form-select") }}
-                                {% if form.category_id.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.category_id.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.programming_languages.id }}" class="form-label">{{ form.programming_languages.label.text }}</label>
-                                {{ form.programming_languages(class="form-control") }}
-                                {% if form.programming_languages.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.programming_languages.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                                {% if form.programming_languages.description %}
-                                    <div class="form-text">{{ form.programming_languages.description }}</div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.framework.id }}" class="form-label">{{ form.framework.label.text }}</label>
-                                {{ form.framework(class="form-control") }}
-                                {% if form.framework.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.framework.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.license_type.id }}" class="form-label">{{ form.license_type.label.text }} <span class="text-danger">*</span></label>
-                                {{ form.license_type(class="form-select") }}
-                                {% if form.license_type.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.license_type.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label for="{{ form.version.id }}" class="form-label">{{ form.version.label.text }}</label>
-                                {{ form.version(class="form-control") }}
-                                {% if form.version.errors %}
-                                    <div class="text-danger small">
-                                        {% for error in form.version.errors %}{{ error }}{% endfor %}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <!-- Current thumbnail display -->
-                        {% if product.thumbnail_url %}
-                            <div class="mb-3">
-                                <label class="form-label">Current Thumbnail</label>
-                                <div class="mb-2">
-                                    <img src="{{ product.thumbnail_url }}" alt="Current thumbnail" 
-                                         class="img-thumbnail" style="max-width: 200px; max-height: 150px;">
+                                    {% if form.price.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.price.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.category.label(class="form-label") }}
+                                    {{ form.category(class="form-select") }}
+                                    {% if form.category.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.category.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.programming_language.label(class="form-label") }}
+                            {{ form.programming_language(class="form-select") }}
+                            {% if form.programming_language.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.programming_language.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.tags.label(class="form-label") }}
+                            {{ form.tags(class="form-control") }}
+                            <small class="form-text text-muted">Separate tags with commas (e.g., python, web, api)</small>
+                            {% if form.tags.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.tags.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        {% if form.demo_files %}
+                        <div class="mb-3">
+                            {{ form.demo_files.label(class="form-label") }}
+                            {{ form.demo_files(class="form-control", accept=".zip,.rar,.tar,.gz,.py,.js,.html,.css,.sql,.json,.xml,.txt,.md") }}
+                            <small class="form-text text-muted">Upload new demo files to replace existing ones (optional)</small>
+                            {% if form.demo_files.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.demo_files.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
                         {% endif %}
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.thumbnail.id }}" class="form-label">{{ form.thumbnail.label.text }}</label>
-                            {{ form.thumbnail(class="form-control") }}
-                            {% if form.thumbnail.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.thumbnail.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                            <div class="form-text">Upload a new thumbnail to replace the current one (optional)</div>
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.demo_url.id }}" class="form-label">{{ form.demo_url.label.text }}</label>
-                            {{ form.demo_url(class="form-control") }}
-                            {% if form.demo_url.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.demo_url.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.github_url.id }}" class="form-label">{{ form.github_url.label.text }}</label>
-                            {{ form.github_url(class="form-control") }}
-                            {% if form.github_url.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.github_url.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label for="{{ form.documentation_url.id }}" class="form-label">{{ form.documentation_url.label.text }}</label>
-                            {{ form.documentation_url(class="form-control") }}
-                            {% if form.documentation_url.errors %}
-                                <div class="text-danger small">
-                                    {% for error in form.documentation_url.errors %}{{ error }}{% endfor %}
-                                </div>
-                            {% endif %}
-                        </div>
-                        
-                        {% if product.status != 'approved' %}
-                            <div class="alert alert-warning">
-                                <i class="fas fa-exclamation-triangle me-2"></i>
-                                <strong>Product Status:</strong> {{ product.status.title() }}
-                                {% if product.status == 'pending' %}
-                                    - Your product is currently being reviewed.
-                                {% elif product.status == 'rejected' %}
-                                    - Your product was rejected. Please make necessary changes and resubmit.
-                                {% endif %}
-                            </div>
-                        {% endif %}
-                        
-                        <div class="alert alert-info">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Note:</strong> Significant changes to your product will require re-approval.
-                        </div>
-                        
-                        <div class="d-flex gap-2">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="fas fa-save me-2"></i>Update Product
-                            </button>
-                            <a href="{{ url_for('seller_dashboard') }}" class="btn btn-secondary">Cancel</a>
-                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-outline-primary">
-                                <i class="fas fa-eye me-2"></i>View Product
-                            </a>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>
                 </div>

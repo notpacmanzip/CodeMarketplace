@@ -629,6 +629,34 @@ def team_detail(team_id):
     return render_template('teams/detail.html', team=team)
 
 
+@app.route('/teams/<int:team_id>/edit', methods=['GET', 'POST'])
+@require_login
+def edit_team(team_id):
+    """Edit team details"""
+    team = Team.query.get_or_404(team_id)
+    
+    # Check if user is team owner or admin
+    user_member = TeamMember.query.filter_by(team_id=team_id, user_id=current_user.id).first()
+    if not user_member or user_member.role not in ['owner', 'admin']:
+        flash('You do not have permission to edit this team.', 'error')
+        return redirect(url_for('team_detail', team_id=team_id))
+    
+    form = TeamForm(obj=team)
+    
+    if form.validate_on_submit():
+        team.name = form.name.data
+        team.description = form.description.data
+        team.is_public = form.is_public.data
+        team.max_members = form.max_members.data
+        team.updated_at = datetime.now()
+        
+        db.session.commit()
+        flash('Team updated successfully!', 'success')
+        return redirect(url_for('team_detail', team_id=team_id))
+    
+    return render_template('teams/edit.html', form=form, team=team)
+
+
 @app.route('/teams/<int:team_id>/join', methods=['POST'])
 @require_login
 def join_team(team_id):

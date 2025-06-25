@@ -29,16 +29,21 @@ class User(UserMixin, db.Model):
 
     # Relationships
     products = db.relationship('Product', backref='seller', lazy=True)
+    
     reviews_given = db.relationship('Review', foreign_keys='Review.reviewer_id', backref='reviewer', lazy=True)
     reviews_received = db.relationship('Review', foreign_keys='Review.seller_id', backref='seller_user', lazy=True)
     messages_sent = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender', lazy=True)
     messages_received = db.relationship('Message', foreign_keys='Message.recipient_id', backref='recipient', lazy=True)
     purchases = db.relationship('Purchase', backref='buyer', lazy=True)
 
-    @property
     def full_name(self):
+        """Return full name or email if names not available"""
         if self.first_name and self.last_name:
             return f"{self.first_name} {self.last_name}"
+        elif self.first_name:
+            return self.first_name
+        else:
+            return self.email or self.id
         return self.first_name or self.last_name or "Anonymous"
 
     @property
