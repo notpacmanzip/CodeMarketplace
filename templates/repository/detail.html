@@ -22,9 +22,9 @@
                             </h1>
                             <p class="text-muted mb-3">{{ repository.description or "No description provided" }}</p>
                             <div class="d-flex gap-3">
-                                <span class="badge bg-info">{{ repository.language or "Unknown" }}</span>
-                                <span class="badge bg-{{ 'success' if repository.visibility == 'public' else 'warning' if repository.visibility == 'team' else 'secondary' }}">{{ repository.visibility.title() }}</span>
-                                <span class="badge bg-light text-dark">{{ repository.files|length }} files</span>
+                                <span class="badge bg-info">{{ repository.default_branch }}</span>
+                                <span class="badge bg-{{ 'warning' if repository.is_private else 'success' }}">{{ 'Private' if repository.is_private else 'Public' }}</span>
+                                <span class="badge bg-light text-dark">{{ files|length }} files</span>
                             </div>
                         </div>
                         <div class="ms-auto">
@@ -35,7 +35,7 @@
                                 <a href="{{ url_for('share_repository', repo_id=repository.id) }}" class="btn btn-outline-primary me-2">
                                     <i class="fas fa-share"></i> Share
                                 </a>
-                                <a href="{{ url_for('collaborative_editor', project_id=repository.project.id) }}" class="btn btn-success">
+                                <a href="{{ url_for('repository_editor', repo_id=repository.id) }}" class="btn btn-success">
                                     <i class="fas fa-code"></i> Open Editor
                                 </a>
                             {% endif %}

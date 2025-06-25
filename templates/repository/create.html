@@ -42,11 +42,11 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    {{ form.language.label(class="form-label") }}
-                                    {{ form.language(class="form-select") }}
-                                    {% if form.language.errors %}
+                                    {{ form.default_branch.label(class="form-label") }}
+                                    {{ form.default_branch(class="form-control") }}
+                                    {% if form.default_branch.errors %}
                                         <div class="text-danger">
-                                            {% for error in form.language.errors %}
+                                            {% for error in form.default_branch.errors %}
                                                 <small>{{ error }}</small>
                                             {% endfor %}
                                         </div>
@@ -55,11 +55,13 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    {{ form.visibility.label(class="form-label") }}
-                                    {{ form.visibility(class="form-select") }}
-                                    {% if form.visibility.errors %}
+                                    <div class="form-check">
+                                        {{ form.is_private(class="form-check-input") }}
+                                        {{ form.is_private.label(class="form-check-label") }}
+                                    </div>
+                                    {% if form.is_private.errors %}
                                         <div class="text-danger">
-                                            {% for error in form.visibility.errors %}
+                                            {% for error in form.is_private.errors %}
                                                 <small>{{ error }}</small>
                                             {% endfor %}
                                         </div>
@@ -69,7 +71,7 @@
                         </div>
 
                         <div class="d-flex justify-content-between">
-                            <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-secondary">Cancel</a>
+                            <a href="{{ url_for('repositories_list') }}" class="btn btn-secondary">Cancel</a>
                             {{ form.submit(class="btn btn-primary") }}
                         </div>
                     </form>

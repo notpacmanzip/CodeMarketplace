@@ -155,8 +155,9 @@ def repository_detail(repo_id):
     can_edit = (repository.owner_id == current_user.id or 
                 current_user.user_type == 'admin')
     
-    return render_template('collaboration/repository_detail.html', 
+    return render_template('repository/detail.html', 
                          repository=repository, 
+                         files=files,
                          can_edit=can_edit)
 
 
@@ -243,6 +244,33 @@ def file_detail(file_id):
                 current_user.user_type == 'admin')
     
     return render_template('repository/file_detail.html', file=file, can_edit=can_edit)
+
+
+@app.route('/repositories/<int:repo_id>/editor')
+@require_login
+def repository_editor(repo_id):
+    """Open repository in code editor"""
+    repository = CodeRepository.query.get_or_404(repo_id)
+    
+    # Check if user has access
+    is_contributor = ProjectContributor.query.filter_by(
+        project_id=repository.project_id, user_id=current_user.id
+    ).first()
+    
+    if not is_contributor and repository.owner_id != current_user.id:
+        if repository.is_private:
+            abort(403)
+    
+    # Get all files in repository
+    files = CodeFile.query.filter_by(
+        repository_id=repo_id, is_deleted=False
+    ).order_by(CodeFile.file_path).all()
+    
+    # Check if user can edit
+    can_edit = (is_contributor is not None) or (repository.owner_id == current_user.id)
+    
+    return render_template('repository/editor.html',
+                         repository=repository, files=files, can_edit=can_edit)
 
 
 @app.route('/files/<int:file_id>/edit', methods=['GET', 'POST'])
