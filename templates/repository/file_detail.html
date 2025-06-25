@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}{{ file.filename }} - {{ file.repository.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- File Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('project_detail', project_id=file.repository.project.id) }}">{{ file.repository.project.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('repository_detail', repo_id=file.repository.id) }}">{{ file.repository.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">{{ file.filename }}</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <h2 class="mb-2">{{ file.filename }}</h2>
+                    <div class="d-flex align-items-center gap-3 text-muted">
+                        <span><i class="fas fa-folder"></i> {{ file.file_path }}</span>
+                        {% if file.language %}
+                            <span class="badge bg-light text-dark">{{ file.language }}</span>
+                        {% endif %}
+                        <span><i class="fas fa-file"></i> {{ file.file_size or 0 }} bytes</span>
+                        <span><i class="fas fa-history"></i> v{{ file.version }}</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-2">
+                    {% if can_edit %}
+                        <a href="{{ url_for('edit_file', file_id=file.id) }}" class="btn btn-primary">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                    {% endif %}
+                    <button class="btn btn-outline-secondary" onclick="copyToClipboard()">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="downloadFile()">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- File Content -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">File Content</h5>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="toggleLineNumbers()">
+                            <i class="fas fa-list-ol"></i> Line Numbers
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="toggleWordWrap()">
+                            <i class="fas fa-text-width"></i> Word Wrap
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <pre id="file-content" class="mb-0 p-3" style="background-color: #f8f9fa; border: none; max-height: 600px; overflow: auto; font-family: 'Monaco', 'Consolas', 'Ubuntu Mono', monospace; font-size: 14px; line-height: 1.5;"><code>{{ file.content }}</code></pre>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- File Info -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">File Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Repository:</strong><br>
+                        <a href="{{ url_for('repository_detail', repo_id=file.repository.id) }}" class="text-decoration-none">
+                            {{ file.repository.name }}
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Last Modified:</strong><br>
+                        <span class="text-muted">{{ file.updated_at.strftime('%B %d, %Y at %H:%M') }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Modified By:</strong><br>
+                        <span class="text-muted">{{ file.modifier.full_name() }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Created:</strong><br>
+                        <span class="text-muted">{{ file.created_at.strftime('%B %d, %Y at %H:%M') }}</span>
+                    </div>
+                    <div>
+                        <strong>Version:</strong><br>
+                        <span class="text-muted">{{ file.version }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        {% if can_edit %}
+                            <a href="{{ url_for('edit_file', file_id=file.id) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-edit"></i> Edit File
+                            </a>
+                        {% endif %}
+                        <a href="{{ url_for('collaborative_editor', project_id=file.repository.project.id) }}" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-code"></i> Open in Editor
+                        </a>
+                        <a href="{{ url_for('create_live_session', project_id=file.repository.project.id) }}" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-users"></i> Start Live Session
+                        </a>
+                        <button onclick="copyToClipboard()" class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-copy"></i> Copy Content
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Statistics</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="fs-5 fw-bold text-primary" id="line-count">-</div>
+                            <small class="text-muted">Lines</small>
+                        </div>
+                        <div class="col-6">
+                            <div class="fs-5 fw-bold text-success">{{ file.file_size or 0 }}</div>
+                            <small class="text-muted">Bytes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+#file-content {
+    white-space: pre;
+    word-wrap: normal;
+    overflow-x: auto;
+}
+
+#file-content.wrap {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    overflow-x: hidden;
+}
+
+.line-numbers {
+    counter-reset: line-number;
+}
+
+.line-numbers .line::before {
+    counter-increment: line-number;
+    content: counter(line-number);
+    display: inline-block;
+    width: 3em;
+    text-align: right;
+    margin-right: 1em;
+    color: #999;
+    border-right: 1px solid #ddd;
+    padding-right: 0.5em;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Count lines
+    const content = document.getElementById('file-content').textContent;
+    const lineCount = content.split('\n').length;
+    document.getElementById('line-count').textContent = lineCount;
+});
+
+function copyToClipboard() {
+    const content = document.getElementById('file-content').textContent;
+    navigator.clipboard.writeText(content).then(function() {
+        // Show success feedback
+        const btn = event.target.closest('button');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        btn.classList.remove('btn-outline-secondary');
+        btn.classList.add('btn-success');
+        
+        setTimeout(function() {
+            btn.innerHTML = originalText;
+            btn.classList.remove('btn-success');
+            btn.classList.add('btn-outline-secondary');
+        }, 2000);
+    });
+}
+
+function downloadFile() {
+    const content = document.getElementById('file-content').textContent;
+    const filename = '{{ file.filename }}';
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(url);
+}
+
+function toggleLineNumbers() {
+    const content = document.getElementById('file-content');
+    const code = content.querySelector('code');
+    
+    if (content.classList.contains('line-numbers')) {
+        content.classList.remove('line-numbers');
+        code.innerHTML = code.textContent;
+    } else {
+        content.classList.add('line-numbers');
+        const lines = code.textContent.split('\n');
+        code.innerHTML = lines.map(line => `<span class="line">${line}</span>`).join('\n');
+    }
+}
+
+function toggleWordWrap() {
+    const content = document.getElementById('file-content');
+    content.classList.toggle('wrap');
+}
+</script>
+{% endblock %}

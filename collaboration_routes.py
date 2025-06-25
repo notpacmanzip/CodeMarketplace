@@ -186,7 +186,12 @@ def file_detail(file_id):
         if file.repository.is_private or not file.repository.project.is_public:
             abort(403)
     
-    return render_template('collaboration/file_detail.html', file=file)
+    # Check if user can edit
+    can_edit = (file.repository.owner_id == current_user.id or 
+                is_contributor or 
+                current_user.user_type == 'admin')
+    
+    return render_template('repository/file_detail.html', file=file, can_edit=can_edit)
 
 
 @app.route('/files/<int:file_id>/edit', methods=['GET', 'POST'])
@@ -219,7 +224,7 @@ def edit_file(file_id):
         flash('File updated successfully!', 'success')
         return redirect(url_for('file_detail', file_id=file.id))
     
-    return render_template('collaboration/edit_file.html', 
+    return render_template('repository/file_editor.html', 
                          form=form, file=file)
 
 

@@ -1,161 +1,305 @@
 {% extends "base.html" %}
 
-{% block title %}Code Editor - {{ file.filename if file else 'New File' }}{% endblock %}
-
-{% block head %}
-<style>
-    .code-editor {
-        height: 60vh;
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
-        font-size: 14px;
-    }
-    .file-tree {
-        height: 60vh;
-        overflow-y: auto;
-        border: 1px solid #dee2e6;
-        border-radius: 0.375rem;
-    }
-    .breadcrumb-item + .breadcrumb-item::before {
-        content: "/";
-    }
-</style>
-{% endblock %}
+{% block title %}Edit {{ file.filename }} - {{ file.repository.name }}{% endblock %}
 
 {% block content %}
 <div class="container-fluid mt-4">
-    <!-- Breadcrumb -->
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{{ url_for('project_detail', project_id=repository.project.id) }}">{{ repository.project.name }}</a></li>
-            <li class="breadcrumb-item"><a href="#" onclick="history.back()">{{ repository.name }}</a></li>
-            <li class="breadcrumb-item active">{{ file.filename if file else 'New File' }}</li>
-        </ol>
-    </nav>
-
     <div class="row">
-        <!-- File Tree -->
-        <div class="col-md-3">
-            <div class="card">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h6 class="mb-0">{{ repository.name }}</h6>
-                    <button class="btn btn-sm btn-outline-primary" onclick="createNewFile()">
-                        <i class="fas fa-plus"></i>
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('project_detail', project_id=file.repository.project.id) }}">{{ file.repository.project.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('repository_detail', repo_id=file.repository.id) }}">{{ file.repository.name }}</a>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <a href="{{ url_for('file_detail', file_id=file.id) }}">{{ file.filename }}</a>
+                    </li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </nav>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="mb-1">Edit {{ file.filename }}</h2>
+                    <p class="text-muted mb-0">{{ file.file_path }}</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('file_detail', file_id=file.id) }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times"></i> Cancel
+                    </a>
+                    <button type="submit" form="edit-form" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Save Changes
                     </button>
                 </div>
-                <div class="file-tree">
-                    <div class="p-2">
-                        {% for repo_file in repository.files %}
-                        <div class="py-1">
-                            <a href="{{ url_for('edit_file', repo_id=repository.id, file_id=repo_file.id) }}" 
-                               class="text-decoration-none {% if file and file.id == repo_file.id %}fw-bold text-primary{% else %}text-muted{% endif %}">
-                                <i class="fas fa-file-code me-2"></i>{{ repo_file.filename }}
-                            </a>
-                        </div>
-                        {% endfor %}
-                    </div>
-                </div>
             </div>
-        </div>
-
-        <!-- Code Editor -->
-        <div class="col-md-9">
-            <div class="card">
-                <div class="card-header">
-                    <form method="POST" class="d-flex justify-content-between align-items-center">
-                        {{ form.hidden_tag() }}
-                        <div class="d-flex align-items-center gap-3">
-                            <div>
-                                {{ form.filename.label(class="form-label mb-0 me-2") }}
-                                {{ form.filename(class="form-control form-control-sm", style="width: 200px;") }}
-                            </div>
-                            <div>
-                                {{ form.language.label(class="form-label mb-0 me-2") }}
-                                {{ form.language(class="form-select form-select-sm", style="width: 150px;") }}
-                            </div>
-                        </div>
-                        <div>
-                            <button type="submit" class="btn btn-success btn-sm me-2">
-                                <i class="fas fa-save"></i> Save
-                            </button>
-                            {% if file %}
-                            <button type="button" class="btn btn-outline-danger btn-sm" onclick="deleteFile({{ file.id }})">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                            {% endif %}
-                        </div>
-                    </form>
-                </div>
-                <div class="card-body p-0">
-                    {{ form.content(class="form-control code-editor border-0", placeholder="Start coding here...") }}
-                </div>
-            </div>
-
-            <!-- File Info -->
-            {% if file %}
-            <div class="card mt-3">
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <small class="text-muted">
-                                <strong>Path:</strong> {{ file.filepath }}<br>
-                                <strong>Size:</strong> {{ file.size }} bytes<br>
-                                <strong>Language:</strong> {{ file.language.title() }}
-                            </small>
-                        </div>
-                        <div class="col-md-6 text-end">
-                            <small class="text-muted">
-                                <strong>Created:</strong> {{ file.created_at.strftime('%Y-%m-%d %H:%M') }}<br>
-                                <strong>Updated:</strong> {{ file.updated_at.strftime('%Y-%m-%d %H:%M') }}
-                            </small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endif %}
         </div>
     </div>
+
+    <form id="edit-form" method="POST">
+        {{ form.hidden_tag() }}
+        
+        <div class="row mb-3">
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form.filename.label(class="form-label") }}
+                    {{ form.filename(class="form-control") }}
+                    {% if form.filename.errors %}
+                        <div class="text-danger">
+                            {% for error in form.filename.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form.file_path.label(class="form-label") }}
+                    {{ form.file_path(class="form-control") }}
+                    {% if form.file_path.errors %}
+                        <div class="text-danger">
+                            {% for error in form.file_path.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="mb-3">
+                    {{ form.language.label(class="form-label") }}
+                    {{ form.language(class="form-select") }}
+                    {% if form.language.errors %}
+                        <div class="text-danger">
+                            {% for error in form.language.errors %}
+                                <small>{{ error }}</small>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor Toolbar -->
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">File Content</h5>
+                <div class="d-flex gap-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleFullscreen()">
+                        <i class="fas fa-expand"></i> Fullscreen
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" onclick="formatCode()">
+                        <i class="fas fa-magic"></i> Format
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-cog"></i> Settings
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="#" onclick="toggleLineNumbers()">Toggle Line Numbers</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="toggleWordWrap()">Toggle Word Wrap</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="increaseFontSize()">Increase Font Size</a></li>
+                            <li><a class="dropdown-item" href="#" onclick="decreaseFontSize()">Decrease Font Size</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {{ form.content(class="form-control", rows="25", style="font-family: 'Monaco', 'Consolas', 'Ubuntu Mono', monospace; font-size: 14px; line-height: 1.5; border: none; resize: vertical; min-height: 500px;") }}
+                {% if form.content.errors %}
+                    <div class="text-danger p-3">
+                        {% for error in form.content.errors %}
+                            <small>{{ error }}</small>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Save Options -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="mb-2">Save Changes</h6>
+                        <small class="text-muted">Your changes will be saved as version {{ file.version + 1 }}</small>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <div class="d-flex gap-2 justify-content-end">
+                            <a href="{{ url_for('file_detail', file_id=file.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
 </div>
+{% endblock %}
 
+{% block extra_css %}
+<style>
+#content {
+    background-color: #1e1e1e;
+    color: #d4d4d4;
+}
+
+#content:focus {
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.fullscreen-editor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 9999;
+    background: white;
+}
+
+.editor-line-numbers {
+    background: linear-gradient(to right, #f8f9fa 50px, #ffffff 50px);
+    background-attachment: local;
+    background-repeat: no-repeat;
+    padding-left: 60px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
 <script>
-function createNewFile() {
-    const filename = prompt('Enter filename (e.g., main.py, app.js, README.md):');
-    if (filename) {
-        window.location.href = `{{ url_for('create_file', repo_id=repository.id) }}?filename=${encodeURIComponent(filename)}`;
-    }
-}
+let currentFontSize = 14;
 
-function deleteFile(fileId) {
-    if (confirm('Are you sure you want to delete this file? This action cannot be undone.')) {
-        fetch(`/api/files/${fileId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                window.location.href = `{{ url_for('repository_detail', repo_id=repository.id) }}`;
-            } else {
-                alert('Error deleting file');
-            }
-        });
+document.addEventListener('DOMContentLoaded', function() {
+    const textarea = document.getElementById('content');
+    
+    // Auto-resize textarea
+    function autoResize() {
+        textarea.style.height = 'auto';
+        textarea.style.height = Math.max(textarea.scrollHeight, 500) + 'px';
     }
-}
-
-// Auto-save functionality
-let autoSaveTimeout;
-document.getElementById('{{ form.content.id }}').addEventListener('input', function() {
-    clearTimeout(autoSaveTimeout);
-    autoSaveTimeout = setTimeout(() => {
-        console.log('Auto-saving...');
-        // Could implement auto-save here
-    }, 2000);
+    
+    textarea.addEventListener('input', autoResize);
+    autoResize();
+    
+    // Line numbers (simple implementation)
+    updateLineNumbers();
+    textarea.addEventListener('input', updateLineNumbers);
+    textarea.addEventListener('scroll', syncLineNumbers);
 });
 
-// Syntax highlighting would go here in a real implementation
-// You could integrate CodeMirror, Monaco Editor, or similar
+function updateLineNumbers() {
+    // This is a simple implementation - in production you'd want a more robust solution
+    const textarea = document.getElementById('content');
+    const lines = textarea.value.split('\n').length;
+    // Update line count display if needed
+}
+
+function syncLineNumbers() {
+    // Sync line numbers with textarea scroll
+}
+
+function toggleFullscreen() {
+    const card = document.querySelector('.card');
+    const btn = event.target.closest('button');
+    
+    if (card.classList.contains('fullscreen-editor')) {
+        card.classList.remove('fullscreen-editor');
+        btn.innerHTML = '<i class="fas fa-expand"></i> Fullscreen';
+        document.body.style.overflow = '';
+    } else {
+        card.classList.add('fullscreen-editor');
+        btn.innerHTML = '<i class="fas fa-compress"></i> Exit Fullscreen';
+        document.body.style.overflow = 'hidden';
+    }
+}
+
+function formatCode() {
+    // Basic code formatting - you could integrate with prettier or similar
+    const textarea = document.getElementById('content');
+    const language = document.getElementById('language').value;
+    
+    // Simple indentation fix for now
+    let content = textarea.value;
+    
+    if (language === 'javascript' || language === 'typescript') {
+        // Basic JS/TS formatting
+        content = content.replace(/;/g, ';\n').replace(/\{/g, '{\n').replace(/\}/g, '\n}');
+    } else if (language === 'python') {
+        // Basic Python formatting
+        content = content.replace(/:/g, ':\n');
+    }
+    
+    textarea.value = content;
+}
+
+function toggleLineNumbers() {
+    const textarea = document.getElementById('content');
+    textarea.classList.toggle('editor-line-numbers');
+}
+
+function toggleWordWrap() {
+    const textarea = document.getElementById('content');
+    if (textarea.style.whiteSpace === 'nowrap') {
+        textarea.style.whiteSpace = 'pre-wrap';
+    } else {
+        textarea.style.whiteSpace = 'nowrap';
+    }
+}
+
+function increaseFontSize() {
+    currentFontSize += 2;
+    document.getElementById('content').style.fontSize = currentFontSize + 'px';
+}
+
+function decreaseFontSize() {
+    if (currentFontSize > 10) {
+        currentFontSize -= 2;
+        document.getElementById('content').style.fontSize = currentFontSize + 'px';
+    }
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    if (e.ctrlKey || e.metaKey) {
+        switch(e.key) {
+            case 's':
+                e.preventDefault();
+                document.getElementById('edit-form').submit();
+                break;
+            case 'f':
+                e.preventDefault();
+                toggleFullscreen();
+                break;
+        }
+    }
+});
+
+// Auto-save draft to localStorage
+const textarea = document.getElementById('content');
+const autosaveKey = 'file_edit_{{ file.id }}';
+
+// Load draft
+const savedDraft = localStorage.getItem(autosaveKey);
+if (savedDraft && savedDraft !== textarea.value) {
+    if (confirm('A draft was found. Would you like to restore it?')) {
+        textarea.value = savedDraft;
+    }
+}
+
+// Save draft periodically
+setInterval(function() {
+    localStorage.setItem(autosaveKey, textarea.value);
+}, 30000); // Save every 30 seconds
+
+// Clear draft on successful save
+document.getElementById('edit-form').addEventListener('submit', function() {
+    localStorage.removeItem(autosaveKey);
+});
 </script>
 {% endblock %}
