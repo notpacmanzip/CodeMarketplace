@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}DevMarket - Premier Software Marketplace for Developers{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Discover & Sell Amazing Software</h1>
+                <p class="lead mb-4">The premier marketplace where developers buy and sell high-quality software products, applications, and code libraries.</p>
+                <div class="d-flex gap-3">
+                    <a href="{{ url_for('product_list') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-search me-2"></i>Browse Products
+                    </a>
+                    <a href="{{ url_for('replit_auth.login') }}" class="btn btn-outline-light btn-lg">
+                        <i class="fas fa-plus me-2"></i>Start Selling
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-6 text-center">
+                <i class="fas fa-laptop-code display-1 opacity-75"></i>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="fw-bold mb-3">Why Choose DevMarket?</h2>
+                <p class="text-muted">Built by developers, for developers</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-shield-alt fa-2x text-primary"></i>
+                    </div>
+                    <h5 class="fw-bold">Secure Transactions</h5>
+                    <p class="text-muted">Safe and secure payment processing with buyer protection and escrow services.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-code fa-2x text-success"></i>
+                    </div>
+                    <h5 class="fw-bold">Quality Code</h5>
+                    <p class="text-muted">All products are reviewed for quality and completeness before being listed.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fas fa-comments fa-2x text-info"></i>
+                    </div>
+                    <h5 class="fw-bold">Direct Communication</h5>
+                    <p class="text-muted">Connect directly with sellers for support, customization, and collaboration.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if featured_products %}
+<!-- Featured Products -->
+<section class="py-5 bg-dark bg-opacity-25">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="fw-bold">Featured Products</h2>
+                <p class="text-muted">Hand-picked quality software from our top developers</p>
+            </div>
+        </div>
+        
+        <div class="row g-4">
+            {% for product in featured_products %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        {% if product.thumbnail_url %}
+                            <img src="{{ product.thumbnail_url }}" class="card-img-top" alt="{{ product.title }}" style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" style="height: 200px;">
+                                <i class="fas fa-code fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ product.title }}</h5>
+                            <p class="card-text text-muted small">{{ product.short_description[:100] }}{% if product.short_description|length > 100 %}...{% endif %}</p>
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <span class="h5 text-primary mb-0">{{ format_price(product.price) }}</span>
+                                    {% if product.average_rating > 0 %}
+                                        <div class="text-warning">
+                                            {% for i in range(5) %}
+                                                {% if i < product.average_rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <small class="text-muted ms-1">({{ product.review_count }})</small>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if product.languages_list %}
+                                    <div class="mb-2">
+                                        {% for lang in product.languages_list[:3] %}
+                                            <span class="badge bg-secondary me-1">{{ lang }}</span>
+                                        {% endfor %}
+                                        {% if product.languages_list|length > 3 %}
+                                            <span class="badge bg-secondary">+{{ product.languages_list|length - 3 }} more</span>
+                                        {% endif %}
+                                    </div>
+                                {% endif %}
+                                
+                                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="btn btn-primary w-100">
+                                    View Details
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="{{ url_for('product_list') }}" class="btn btn-outline-primary">
+                View All Products <i class="fas fa-arrow-right ms-1"></i>
+            </a>
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- Categories Section -->
+<section class="py-5">
+    <div class="container">
+        <div class="row mb-4">
+            <div class="col-12">
+                <h2 class="fw-bold">Browse by Category</h2>
+                <p class="text-muted">Find software products in your area of interest</p>
+            </div>
+        </div>
+        
+        <div class="row g-3">
+            {% for category in categories %}
+                <div class="col-md-6 col-lg-3">
+                    <a href="{{ url_for('product_list', category=category.id) }}" class="text-decoration-none">
+                        <div class="card text-center h-100 category-card">
+                            <div class="card-body">
+                                <i class="fas fa-folder fa-2x text-primary mb-3"></i>
+                                <h6 class="card-title">{{ category.name }}</h6>
+                                <p class="card-text small text-muted">{{ category.description }}</p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5 bg-primary text-white">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-12">
+                <h2 class="fw-bold mb-3">Ready to Start?</h2>
+                <p class="lead mb-4">Join thousands of developers buying and selling amazing software</p>
+                <a href="{{ url_for('replit_auth.login') }}" class="btn btn-light btn-lg">
+                    <i class="fas fa-rocket me-2"></i>Get Started Now
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

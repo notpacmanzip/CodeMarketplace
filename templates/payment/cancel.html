@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Cancelled - DevMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border-warning">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-times-circle fa-4x text-warning"></i>
+                    </div>
+                    <h1 class="fw-bold text-warning mb-3">Payment Cancelled</h1>
+                    <p class="lead text-muted mb-4">
+                        Your payment was cancelled and no charges were made to your account.
+                    </p>
+                    
+                    <div class="alert alert-info text-start">
+                        <h6 class="alert-heading">
+                            <i class="fas fa-info-circle me-2"></i>What happened?
+                        </h6>
+                        <p class="mb-0">
+                            You cancelled the payment process before it was completed. 
+                            This is completely normal and no charges were made.
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex gap-3 justify-content-center flex-wrap mt-4">
+                        <a href="javascript:history.back()" class="btn btn-warning">
+                            <i class="fas fa-arrow-left me-2"></i>Try Again
+                        </a>
+                        <a href="{{ url_for('product_list') }}" class="btn btn-outline-primary">
+                            <i class="fas fa-store me-2"></i>Continue Shopping
+                        </a>
+                        <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-home me-2"></i>Go to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Help Section -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-question-circle me-2"></i>Need Help?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        If you're experiencing issues with the payment process or have questions 
+                        about a product, here are some options:
+                    </p>
+                    
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-envelope text-primary me-2"></i>
+                            Contact the seller directly for product questions
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-life-ring text-success me-2"></i>
+                            Reach out to our support team for technical issues
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-credit-card text-warning me-2"></i>
+                            Check your payment method and try again
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

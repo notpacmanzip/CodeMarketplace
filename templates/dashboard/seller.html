@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}Seller Dashboard - DevMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold">Seller Dashboard</h1>
+            <p class="text-muted">Manage your products and track your sales</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-box fa-2x text-primary mb-2"></i>
+                    <h4 class="card-title">{{ products|length }}</h4>
+                    <p class="card-text text-muted">Total Products</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-shopping-cart fa-2x text-success mb-2"></i>
+                    <h4 class="card-title">{{ total_sales }}</h4>
+                    <p class="card-text text-muted">Total Sales</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-dollar-sign fa-2x text-warning mb-2"></i>
+                    <h4 class="card-title">{{ format_price(total_earnings) }}</h4>
+                    <p class="card-text text-muted">Total Earnings</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-star fa-2x text-info mb-2"></i>
+                    <h4 class="card-title">
+                        {% if current_user.average_rating > 0 %}
+                            {{ "%.1f"|format(current_user.average_rating) }}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </h4>
+                    <p class="card-text text-muted">Average Rating</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title mb-3">Quick Actions</h5>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ url_for('create_product') }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add New Product
+                        </a>
+                        <a href="{{ url_for('inbox') }}" class="btn btn-outline-info">
+                            <i class="fas fa-envelope me-2"></i>Check Messages
+                        </a>
+                        <a href="{{ url_for('product_list') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-store me-2"></i>Browse Marketplace
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products Management -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="card-title mb-0">Your Products</h5>
+                    <a href="{{ url_for('create_product') }}" class="btn btn-primary btn-sm">
+                        <i class="fas fa-plus me-1"></i>Add Product
+                    </a>
+                </div>
+                <div class="card-body">
+                    {% if products %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Status</th>
+                                        <th>Price</th>
+                                        <th>Sales</th>
+                                        <th>Views</th>
+                                        <th>Rating</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in products %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    {% if product.thumbnail_url %}
+                                                        <img src="{{ product.thumbnail_url }}" alt="{{ product.title }}" 
+                                                             class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                    {% else %}
+                                                        <div class="bg-secondary rounded me-3 d-flex align-items-center justify-content-center" 
+                                                             style="width: 50px; height: 50px;">
+                                                            <i class="fas fa-code text-muted"></i>
+                                                        </div>
+                                                    {% endif %}
+                                                    <div>
+                                                        <h6 class="mb-0">{{ product.title }}</h6>
+                                                        <small class="text-muted">{{ product.category.name }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-{{ 'success' if product.status == 'approved' else 'warning' if product.status == 'pending' else 'danger' }}">
+                                                    {{ product.status.title() }}
+                                                </span>
+                                                {% if not product.is_active %}
+                                                    <span class="badge bg-secondary">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ format_price(product.price) }}</td>
+                                            <td>{{ product.purchases|length }}</td>
+                                            <td>{{ product.view_count }}</td>
+                                            <td>
+                                                {% if product.average_rating > 0 %}
+                                                    <div class="text-warning">
+                                                        {% for i in range(5) %}
+                                                            {% if i < product.average_rating %}
+                                                                <i class="fas fa-star"></i>
+                                                            {% else %}
+                                                                <i class="far fa-star"></i>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                        <small class="text-muted">({{ product.review_count }})</small>
+                                                    </div>
+                                                {% else %}
+                                                    <small class="text-muted">No reviews</small>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    <a href="{{ url_for('product_detail', product_id=product.id) }}" 
+                                                       class="btn btn-sm btn-outline-primary" title="View">
+                                                        <i class="fas fa-eye"></i>
+                                                    </a>
+                                                    <a href="{{ url_for('edit_product', product_id=product.id) }}" 
+                                                       class="btn btn-sm btn-outline-secondary" title="Edit">
+                                                        <i class="fas fa-edit"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No products yet</h5>
+                            <p class="text-muted">Start selling by creating your first product!</p>
+                            <a href="{{ url_for('create_product') }}" class="btn btn-primary">
+                                <i class="fas fa-plus me-2"></i>Create First Product
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Reviews -->
+    {% if recent_reviews %}
+        <div class="row">
+            <div class="col-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Recent Reviews</h5>
+                    </div>
+                    <div class="card-body">
+                        {% for review in recent_reviews %}
+                            <div class="mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        {% if review.reviewer.profile_image_url %}
+                                            <img src="{{ review.reviewer.profile_image_url }}" alt="{{ review.reviewer.full_name }}" 
+                                                 class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ review.reviewer.full_name }}</strong>
+                                            <small class="text-muted">reviewed</small>
+                                            <a href="{{ url_for('product_detail', product_id=review.product.id) }}" class="text-decoration-none">
+                                                {{ review.product.title }}
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ review.created_at.strftime('%b %d, %Y') }}</small>
+                                </div>
+                                
+                                <div class="text-warning mb-2">
+                                    {% for i in range(5) %}
+                                        {% if i < review.rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                
+                                {% if review.title %}
+                                    <h6 class="fw-bold">{{ review.title }}</h6>
+                                {% endif %}
+                                
+                                {% if review.comment %}
+                                    <p class="text-muted mb-0">{{ review.comment[:150] }}{% if review.comment|length > 150 %}...{% endif %}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

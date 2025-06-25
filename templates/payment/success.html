@@ -1,0 +1,184 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Successful - DevMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Message -->
+            <div class="card border-success">
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="fas fa-check-circle fa-4x text-success"></i>
+                    </div>
+                    <h1 class="fw-bold text-success mb-3">Payment Successful!</h1>
+                    <p class="lead text-muted mb-4">
+                        Thank you for your purchase! Your transaction has been completed successfully.
+                    </p>
+                    
+                    <!-- Transaction Details -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Purchase Details</h5>
+                            <div class="row g-3 text-start">
+                                <div class="col-md-6">
+                                    <strong>Product:</strong><br>
+                                    <span class="text-muted">{{ purchase.product.title }}</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Amount Paid:</strong><br>
+                                    <span class="text-muted">{{ format_price(purchase.amount_paid) }}</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Transaction ID:</strong><br>
+                                    <span class="text-muted">{{ purchase.transaction_id }}</span>
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Purchase Date:</strong><br>
+                                    <span class="text-muted">{{ purchase.created_at.strftime('%B %d, %Y at %I:%M %p') }}</span>
+                                </div>
+                                <div class="col-12">
+                                    <strong>Seller:</strong><br>
+                                    <span class="text-muted">{{ purchase.product.seller.full_name }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Next Steps -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-list-check me-2"></i>What's Next?
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center me-3" 
+                                     style="width: 40px; height: 40px;">
+                                    <i class="fas fa-download text-primary"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold">Access Your Product</h6>
+                                    <p class="text-muted small mb-0">You now have full access to the product and all its features.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-success bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center me-3" 
+                                     style="width: 40px; height: 40px;">
+                                    <i class="fas fa-envelope text-success"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold">Contact the Seller</h6>
+                                    <p class="text-muted small mb-0">Get support or ask questions directly from the product creator.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-warning bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center me-3" 
+                                     style="width: 40px; height: 40px;">
+                                    <i class="fas fa-star text-warning"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold">Leave a Review</h6>
+                                    <p class="text-muted small mb-0">Help other buyers by sharing your experience with this product.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex align-items-start">
+                                <div class="bg-info bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center me-3" 
+                                     style="width: 40px; height: 40px;">
+                                    <i class="fas fa-receipt text-info"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold">Keep Your Receipt</h6>
+                                    <p class="text-muted small mb-0">Save this page or screenshot for your records.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center mt-4">
+                <div class="d-flex gap-3 justify-content-center flex-wrap">
+                    <a href="{{ url_for('product_detail', product_id=purchase.product.id) }}" class="btn btn-primary">
+                        <i class="fas fa-eye me-2"></i>View Product
+                    </a>
+                    <a href="{{ url_for('contact_user', user_id=purchase.product.seller_id) }}" class="btn btn-outline-success">
+                        <i class="fas fa-envelope me-2"></i>Contact Seller
+                    </a>
+                    <a href="{{ url_for('home') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-home me-2"></i>Go to Dashboard
+                    </a>
+                    <a href="{{ url_for('product_list') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-store me-2"></i>Continue Shopping
+                    </a>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="alert alert-info mt-4">
+                <h6 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>Important Notes
+                </h6>
+                <ul class="mb-0">
+                    <li>You can access your purchased products anytime from your dashboard</li>
+                    <li>The seller has been notified of your purchase</li>
+                    <li>You can leave a review after trying out the product</li>
+                    <li>Contact our support team if you have any issues</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Confetti effect for successful purchase
+document.addEventListener('DOMContentLoaded', function() {
+    // Simple confetti effect (using CSS animations)
+    function createConfetti() {
+        const colors = ['#007bff', '#28a745', '#ffc107', '#dc3545', '#6f42c1'];
+        
+        for (let i = 0; i < 50; i++) {
+            const confetti = document.createElement('div');
+            confetti.style.position = 'fixed';
+            confetti.style.width = '10px';
+            confetti.style.height = '10px';
+            confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            confetti.style.left = Math.random() * 100 + 'vw';
+            confetti.style.top = '-10px';
+            confetti.style.zIndex = '9999';
+            confetti.style.pointerEvents = 'none';
+            confetti.style.opacity = '0.8';
+            
+            document.body.appendChild(confetti);
+            
+            // Animate confetti falling
+            confetti.animate([
+                { transform: 'translateY(0) rotate(0deg)', opacity: 0.8 },
+                { transform: 'translateY(100vh) rotate(360deg)', opacity: 0 }
+            ], {
+                duration: 3000 + Math.random() * 2000,
+                easing: 'linear'
+            }).onfinish = () => confetti.remove();
+        }
+    }
+    
+    // Trigger confetti after a short delay
+    setTimeout(createConfetti, 500);
+});
+</script>
+{% endblock %}

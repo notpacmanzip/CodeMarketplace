@@ -1,0 +1,240 @@
+{% extends "base.html" %}
+
+{% block title %}Browse Products - DevMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Page Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="fw-bold">Browse Products</h1>
+            <p class="text-muted">Discover amazing software products from talented developers</p>
+        </div>
+    </div>
+
+    <!-- Search and Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Search</label>
+                            <input type="text" name="query" class="form-control" 
+                                   value="{{ current_filters.query or '' }}" 
+                                   placeholder="Search products...">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Category</label>
+                            <select name="category" class="form-select">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                    <option value="{{ category.id }}" 
+                                            {% if current_filters.category == category.id %}selected{% endif %}>
+                                        {{ category.name }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Language</label>
+                            <select name="language" class="form-select">
+                                <option value="">All Languages</option>
+                                <option value="Python" {% if current_filters.language == 'Python' %}selected{% endif %}>Python</option>
+                                <option value="JavaScript" {% if current_filters.language == 'JavaScript' %}selected{% endif %}>JavaScript</option>
+                                <option value="Java" {% if current_filters.language == 'Java' %}selected{% endif %}>Java</option>
+                                <option value="C#" {% if current_filters.language == 'C#' %}selected{% endif %}>C#</option>
+                                <option value="Go" {% if current_filters.language == 'Go' %}selected{% endif %}>Go</option>
+                                <option value="PHP" {% if current_filters.language == 'PHP' %}selected{% endif %}>PHP</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label">Sort By</label>
+                            <select name="sort_by" class="form-select">
+                                <option value="newest" {% if current_filters.sort_by == 'newest' %}selected{% endif %}>Newest</option>
+                                <option value="oldest" {% if current_filters.sort_by == 'oldest' %}selected{% endif %}>Oldest</option>
+                                <option value="price_low" {% if current_filters.sort_by == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+                                <option value="price_high" {% if current_filters.sort_by == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+                                <option value="popular" {% if current_filters.sort_by == 'popular' %}selected{% endif %}>Most Popular</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search me-1"></i>Search
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Header -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">
+                    {% if products.total %}
+                        {{ products.total }} product{{ 's' if products.total != 1 else '' }} found
+                    {% else %}
+                        No products found
+                    {% endif %}
+                </h5>
+                {% if current_user.is_authenticated and current_user.user_type in ['seller', 'admin'] %}
+                    <a href="{{ url_for('create_product') }}" class="btn btn-success">
+                        <i class="fas fa-plus me-2"></i>Add Product
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if products.items %}
+        <!-- Products Grid -->
+        <div class="row g-4 mb-4">
+            {% for product in products.items %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100 product-card">
+                        {% if product.thumbnail_url %}
+                            <img src="{{ product.thumbnail_url }}" class="card-img-top" alt="{{ product.title }}" 
+                                 style="height: 200px; object-fit: cover;">
+                        {% else %}
+                            <div class="card-img-top bg-secondary d-flex align-items-center justify-content-center" 
+                                 style="height: 200px;">
+                                <i class="fas fa-code fa-3x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">{{ product.title }}</h5>
+                            <p class="card-text text-muted">{{ product.short_description[:120] }}{% if product.short_description|length > 120 %}...{% endif %}</p>
+                            
+                            <div class="mb-2">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>by {{ product.seller.full_name }}
+                                </small>
+                            </div>
+                            
+                            {% if product.languages_list %}
+                                <div class="mb-2">
+                                    {% for lang in product.languages_list[:3] %}
+                                        <span class="badge bg-secondary me-1">{{ lang }}</span>
+                                    {% endfor %}
+                                    {% if product.languages_list|length > 3 %}
+                                        <span class="badge bg-secondary">+{{ product.languages_list|length - 3 }}</span>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                            
+                            <div class="mt-auto">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <span class="h5 text-primary mb-0">{{ format_price(product.price) }}</span>
+                                    {% if product.average_rating > 0 %}
+                                        <div class="text-warning">
+                                            {% for i in range(5) %}
+                                                {% if i < product.average_rating %}
+                                                    <i class="fas fa-star"></i>
+                                                {% else %}
+                                                    <i class="far fa-star"></i>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <small class="text-muted ms-1">({{ product.review_count }})</small>
+                                        </div>
+                                    {% else %}
+                                        <small class="text-muted">No reviews yet</small>
+                                    {% endif %}
+                                </div>
+                                
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('product_detail', product_id=product.id) }}" 
+                                       class="btn btn-primary flex-grow-1">View Details</a>
+                                    {% if current_user.is_authenticated %}
+                                        <a href="{{ url_for('contact_user', user_id=product.seller_id) }}" 
+                                           class="btn btn-outline-secondary" title="Contact Seller">
+                                            <i class="fas fa-envelope"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if products.pages > 1 %}
+            <div class="row">
+                <div class="col-12">
+                    <nav aria-label="Products pagination">
+                        <ul class="pagination justify-content-center">
+                            {% if products.has_prev %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('product_list', page=products.prev_num, **current_filters) }}">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            
+                            {% for page_num in products.iter_pages() %}
+                                {% if page_num %}
+                                    {% if page_num != products.page %}
+                                        <li class="page-item">
+                                            <a class="page-link" href="{{ url_for('product_list', page=page_num, **current_filters) }}">
+                                                {{ page_num }}
+                                            </a>
+                                        </li>
+                                    {% else %}
+                                        <li class="page-item active">
+                                            <span class="page-link">{{ page_num }}</span>
+                                        </li>
+                                    {% endif %}
+                                {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">…</span>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if products.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="{{ url_for('product_list', page=products.next_num, **current_filters) }}">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="row">
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No products found</h4>
+                    <p class="text-muted">Try adjusting your search criteria or browse all products.</p>
+                    <a href="{{ url_for('product_list') }}" class="btn btn-primary">
+                        <i class="fas fa-refresh me-2"></i>Clear Filters
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.product-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+</style>
+{% endblock %}

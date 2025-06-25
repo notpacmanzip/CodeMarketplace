@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - {{ product.title }} - DevMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('product_list') }}">Products</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('product_detail', product_id=product.id) }}">{{ product.title }}</a></li>
+                    <li class="breadcrumb-item active">Checkout</li>
+                </ol>
+            </nav>
+            <h1 class="fw-bold">Checkout</h1>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Order Summary -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>Order Summary
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        {% if product.thumbnail_url %}
+                            <img src="{{ product.thumbnail_url }}" alt="{{ product.title }}" 
+                                 class="rounded me-3" style="width: 80px; height: 80px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-secondary rounded me-3 d-flex align-items-center justify-content-center" 
+                                 style="width: 80px; height: 80px;">
+                                <i class="fas fa-code fa-2x text-muted"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="flex-grow-1">
+                            <h5 class="mb-1">{{ product.title }}</h5>
+                            <p class="text-muted mb-2">{{ product.short_description }}</p>
+                            <div class="d-flex align-items-center gap-3">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i>by {{ product.seller.full_name }}
+                                </small>
+                                <small class="text-muted">
+                                    <i class="fas fa-folder me-1"></i>{{ product.category.name }}
+                                </small>
+                            </div>
+                        </div>
+                        
+                        <div class="text-end">
+                            <h4 class="text-primary mb-0">{{ format_price(product.price) }}</h4>
+                            <small class="text-muted">One-time purchase</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Payment Method -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-credit-card me-2"></i>Payment Method
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <strong>Demo Mode:</strong> This is a demonstration of the payment flow. 
+                        No actual payment will be processed.
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="paymentMethod" id="mockPayment" value="mock" checked>
+                                <label class="form-check-label d-flex align-items-center" for="mockPayment">
+                                    <i class="fas fa-credit-card me-2 text-primary"></i>
+                                    <div>
+                                        <div class="fw-bold">Mock Payment</div>
+                                        <small class="text-muted">Simulated payment for demonstration</small>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mock Payment Form -->
+                    <div class="mt-4" id="mockPaymentForm">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Card Number</label>
+                                <input type="text" class="form-control" value="4242 4242 4242 4242" readonly>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Expiry</label>
+                                <input type="text" class="form-control" value="12/25" readonly>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">CVC</label>
+                                <input type="text" class="form-control" value="123" readonly>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label">Cardholder Name</label>
+                                <input type="text" class="form-control" value="{{ current_user.full_name }}" readonly>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Summary -->
+        <div class="col-lg-4">
+            <div class="card sticky-top">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Payment Summary</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Product Price:</span>
+                        <span>{{ format_price(product.price) }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span>Processing Fee:</span>
+                        <span class="text-success">$0.00</span>
+                    </div>
+                    <hr>
+                    <div class="d-flex justify-content-between fw-bold h5">
+                        <span>Total:</span>
+                        <span class="text-primary">{{ format_price(product.price) }}</span>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('purchase_product', product_id=product.id) }}" class="mt-4">
+                        <button type="submit" class="btn btn-primary w-100 btn-lg" id="completePayment">
+                            <i class="fas fa-lock me-2"></i>Complete Purchase
+                        </button>
+                    </form>
+                    
+                    <div class="mt-3 text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Secure checkout powered by DevMarket
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- What You'll Get -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">What You'll Get</h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-download text-success me-2"></i>
+                            Instant download access
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-code text-primary me-2"></i>
+                            Complete source code
+                        </li>
+                        {% if product.documentation_url %}
+                            <li class="mb-2">
+                                <i class="fas fa-book text-info me-2"></i>
+                                Documentation included
+                            </li>
+                        {% endif %}
+                        <li class="mb-2">
+                            <i class="fas fa-envelope text-warning me-2"></i>
+                            Seller support access
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-shield-alt text-secondary me-2"></i>
+                            {{ product.license_type }} license
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const completePaymentBtn = document.getElementById('completePayment');
+    
+    completePaymentBtn.addEventListener('click', function(e) {
+        // Add loading state
+        completePaymentBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        completePaymentBtn.disabled = true;
+        
+        // Simulate processing delay for demo
+        setTimeout(function() {
+            // The form will submit normally
+        }, 1000);
+    });
+});
+</script>
+{% endblock %}

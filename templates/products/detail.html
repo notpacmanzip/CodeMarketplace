@@ -1,0 +1,370 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.title }} - DevMarket{% endblock %}
+
+{% block description %}{{ product.short_description }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Product Header -->
+    <div class="row mb-4">
+        <div class="col-lg-8">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{{ url_for('product_list') }}">Products</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('product_list', category=product.category_id) }}">{{ product.category.name }}</a></li>
+                    <li class="breadcrumb-item active">{{ product.title }}</li>
+                </ol>
+            </nav>
+            
+            <h1 class="fw-bold">{{ product.title }}</h1>
+            <p class="lead text-muted">{{ product.short_description }}</p>
+            
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="d-flex align-items-center">
+                    {% if product.seller.profile_image_url %}
+                        <img src="{{ product.seller.profile_image_url }}" alt="{{ product.seller.full_name }}" 
+                             class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                    {% else %}
+                        <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                             style="width: 32px; height: 32px;">
+                            <i class="fas fa-user text-muted"></i>
+                        </div>
+                    {% endif %}
+                    <div>
+                        <strong>{{ product.seller.full_name }}</strong>
+                        {% if product.seller.is_verified %}
+                            <i class="fas fa-check-circle text-success ms-1" title="Verified Seller"></i>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                {% if product.average_rating > 0 %}
+                    <div class="text-warning">
+                        {% for i in range(5) %}
+                            {% if i < product.average_rating %}
+                                <i class="fas fa-star"></i>
+                            {% else %}
+                                <i class="far fa-star"></i>
+                            {% endif %}
+                        {% endfor %}
+                        <small class="text-muted ms-1">({{ product.review_count }} review{{ 's' if product.review_count != 1 else '' }})</small>
+                    </div>
+                {% endif %}
+                
+                <small class="text-muted">
+                    <i class="fas fa-eye me-1"></i>{{ product.view_count }} views
+                </small>
+                
+                <small class="text-muted">
+                    <i class="fas fa-download me-1"></i>{{ product.download_count }} downloads
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Product Content -->
+        <div class="col-lg-8">
+            <!-- Product Image -->
+            {% if product.thumbnail_url %}
+                <div class="mb-4">
+                    <img src="{{ product.thumbnail_url }}" alt="{{ product.title }}" 
+                         class="img-fluid rounded" style="max-height: 400px; width: 100%; object-fit: cover;">
+                </div>
+            {% endif %}
+
+            <!-- Product Description -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Description</h4>
+                </div>
+                <div class="card-body">
+                    <div class="product-description">
+                        {{ product.description|safe }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Details -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h4 class="card-title mb-0">Technical Details</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        {% if product.programming_languages %}
+                            <div class="col-md-6">
+                                <strong>Programming Languages:</strong>
+                                <div class="mt-1">
+                                    {% for lang in product.languages_list %}
+                                        <span class="badge bg-primary me-1">{{ lang }}</span>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if product.framework %}
+                            <div class="col-md-6">
+                                <strong>Framework/Technology:</strong>
+                                <div class="mt-1">{{ product.framework }}</div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if product.license_type %}
+                            <div class="col-md-6">
+                                <strong>License:</strong>
+                                <div class="mt-1">
+                                    <span class="badge bg-secondary">{{ product.license_type }}</span>
+                                </div>
+                            </div>
+                        {% endif %}
+                        
+                        {% if product.version %}
+                            <div class="col-md-6">
+                                <strong>Version:</strong>
+                                <div class="mt-1">{{ product.version }}</div>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Links -->
+                    <div class="mt-3">
+                        <div class="d-flex gap-2 flex-wrap">
+                            {% if product.demo_url %}
+                                <a href="{{ product.demo_url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-external-link-alt me-1"></i>Live Demo
+                                </a>
+                            {% endif %}
+                            {% if product.github_url %}
+                                <a href="{{ product.github_url }}" target="_blank" class="btn btn-outline-dark btn-sm">
+                                    <i class="fab fa-github me-1"></i>GitHub
+                                </a>
+                            {% endif %}
+                            {% if product.documentation_url %}
+                                <a href="{{ product.documentation_url }}" target="_blank" class="btn btn-outline-info btn-sm">
+                                    <i class="fas fa-book me-1"></i>Documentation
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h4 class="card-title mb-0">Reviews ({{ reviews|length }})</h4>
+                    {% if current_user.is_authenticated and has_purchased and not has_reviewed %}
+                        <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#reviewModal">
+                            <i class="fas fa-star me-1"></i>Write Review
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if reviews %}
+                        {% for review in reviews %}
+                            <div class="mb-3 {% if not loop.last %}border-bottom pb-3{% endif %}">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <div class="d-flex align-items-center">
+                                        {% if review.reviewer.profile_image_url %}
+                                            <img src="{{ review.reviewer.profile_image_url }}" alt="{{ review.reviewer.full_name }}" 
+                                                 class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                        {% else %}
+                                            <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
+                                                 style="width: 32px; height: 32px;">
+                                                <i class="fas fa-user text-muted"></i>
+                                            </div>
+                                        {% endif %}
+                                        <div>
+                                            <strong>{{ review.reviewer.full_name }}</strong>
+                                            {% if review.is_verified_purchase %}
+                                                <span class="badge bg-success ms-1">Verified Purchase</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    <small class="text-muted">{{ review.created_at.strftime('%b %d, %Y') }}</small>
+                                </div>
+                                
+                                <div class="text-warning mb-2">
+                                    {% for i in range(5) %}
+                                        {% if i < review.rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                
+                                {% if review.title %}
+                                    <h6 class="fw-bold">{{ review.title }}</h6>
+                                {% endif %}
+                                
+                                {% if review.comment %}
+                                    <p class="text-muted mb-0">{{ review.comment }}</p>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-star fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">No reviews yet. Be the first to review this product!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Purchase Card -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <h3 class="text-primary mb-0">{{ format_price(product.price) }}</h3>
+                        <small class="text-muted">One-time purchase</small>
+                    </div>
+                    
+                    {% if current_user.is_authenticated %}
+                        {% if has_purchased %}
+                            <div class="alert alert-success text-center">
+                                <i class="fas fa-check-circle me-2"></i>You own this product!
+                            </div>
+                            <a href="#" class="btn btn-success w-100 mb-2" disabled>
+                                <i class="fas fa-download me-2"></i>Already Purchased
+                            </a>
+                        {% elif current_user.id == product.seller_id %}
+                            <div class="alert alert-info text-center">
+                                <i class="fas fa-info-circle me-2"></i>This is your product
+                            </div>
+                            <a href="{{ url_for('edit_product', product_id=product.id) }}" class="btn btn-primary w-100 mb-2">
+                                <i class="fas fa-edit me-2"></i>Edit Product
+                            </a>
+                        {% else %}
+                            <a href="{{ url_for('checkout', product_id=product.id) }}" class="btn btn-primary w-100 mb-2">
+                                <i class="fas fa-shopping-cart me-2"></i>Buy Now
+                            </a>
+                        {% endif %}
+                        
+                        {% if current_user.id != product.seller_id %}
+                            <a href="{{ url_for('contact_user', user_id=product.seller_id) }}" class="btn btn-outline-primary w-100">
+                                <i class="fas fa-envelope me-2"></i>Contact Seller
+                            </a>
+                        {% endif %}
+                    {% else %}
+                        <a href="{{ url_for('replit_auth.login') }}" class="btn btn-primary w-100 mb-2">
+                            <i class="fas fa-shopping-cart me-2"></i>Login to Purchase
+                        </a>
+                        <a href="{{ url_for('replit_auth.login') }}" class="btn btn-outline-primary w-100">
+                            <i class="fas fa-envelope me-2"></i>Login to Contact
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Seller Info -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Seller Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        {% if product.seller.profile_image_url %}
+                            <img src="{{ product.seller.profile_image_url }}" alt="{{ product.seller.full_name }}" 
+                                 class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" 
+                                 style="width: 50px; height: 50px;">
+                                <i class="fas fa-user text-muted"></i>
+                            </div>
+                        {% endif %}
+                        <div>
+                            <h6 class="mb-0">{{ product.seller.full_name }}</h6>
+                            {% if product.seller.company %}
+                                <small class="text-muted">{{ product.seller.company }}</small>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    {% if product.seller.bio %}
+                        <p class="text-muted small">{{ product.seller.bio[:150] }}{% if product.seller.bio|length > 150 %}...{% endif %}</p>
+                    {% endif %}
+                    
+                    <div class="row text-center">
+                        <div class="col-4">
+                            <div class="fw-bold">{{ product.seller.products|length }}</div>
+                            <small class="text-muted">Products</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold">
+                                {% if product.seller.average_rating > 0 %}
+                                    {{ "%.1f"|format(product.seller.average_rating) }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </div>
+                            <small class="text-muted">Rating</small>
+                        </div>
+                        <div class="col-4">
+                            <div class="fw-bold">{{ product.seller.reviews_received|length }}</div>
+                            <small class="text-muted">Reviews</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Review Modal -->
+{% if current_user.is_authenticated and has_purchased and not has_reviewed %}
+<div class="modal fade" id="reviewModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Write a Review</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('add_review', product_id=product.id) }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">Rating</label>
+                        <select name="rating" class="form-select" required>
+                            <option value="">Select a rating</option>
+                            <option value="5">5 Stars - Excellent</option>
+                            <option value="4">4 Stars - Very Good</option>
+                            <option value="3">3 Stars - Good</option>
+                            <option value="2">2 Stars - Fair</option>
+                            <option value="1">1 Star - Poor</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Review Title</label>
+                        <input type="text" name="title" class="form-control" maxlength="200">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Review Comment</label>
+                        <textarea name="comment" class="form-control" rows="4" maxlength="1000"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Submit Review</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_head %}
+<style>
+.product-description {
+    white-space: pre-wrap;
+    line-height: 1.6;
+}
+</style>
+{% endblock %}

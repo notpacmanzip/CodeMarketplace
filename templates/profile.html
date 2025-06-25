@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}{% if editing %}Edit Profile{% else %}Profile{% endif %} - DevMarket{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            {% if editing %}
+                <!-- Edit Profile Form -->
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </h3>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" enctype="multipart/form-data">
+                            {{ form.hidden_tag() }}
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.first_name.id }}" class="form-label">{{ form.first_name.label.text }}</label>
+                                    {{ form.first_name(class="form-control") }}
+                                    {% if form.first_name.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.first_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.last_name.id }}" class="form-label">{{ form.last_name.label.text }}</label>
+                                    {{ form.last_name(class="form-control") }}
+                                    {% if form.last_name.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.last_name.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.user_type.id }}" class="form-label">{{ form.user_type.label.text }}</label>
+                                {{ form.user_type(class="form-select") }}
+                                {% if form.user_type.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.user_type.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Sellers can list products for sale. Buyers can purchase products.</div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.company.id }}" class="form-label">{{ form.company.label.text }}</label>
+                                {{ form.company(class="form-control") }}
+                                {% if form.company.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.company.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.bio.id }}" class="form-label">{{ form.bio.label.text }}</label>
+                                {{ form.bio(class="form-control", rows="4") }}
+                                {% if form.bio.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.bio.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.location.id }}" class="form-label">{{ form.location.label.text }}</label>
+                                    {{ form.location(class="form-control") }}
+                                    {% if form.location.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.location.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.website.id }}" class="form-label">{{ form.website.label.text }}</label>
+                                    {{ form.website(class="form-control") }}
+                                    {% if form.website.errors %}
+                                        <div class="text-danger small">
+                                            {% for error in form.website.errors %}{{ error }}{% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label for="{{ form.github_url.id }}" class="form-label">{{ form.github_url.label.text }}</label>
+                                {{ form.github_url(class="form-control") }}
+                                {% if form.github_url.errors %}
+                                    <div class="text-danger small">
+                                        {% for error in form.github_url.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-2"></i>Save Changes
+                                </button>
+                                <a href="{{ url_for('profile') }}" class="btn btn-secondary">Cancel</a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <!-- View Profile -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h3 class="card-title mb-0">
+                            <i class="fas fa-user me-2"></i>User Profile
+                        </h3>
+                        <a href="{{ url_for('edit_profile') }}" class="btn btn-primary">
+                            <i class="fas fa-edit me-2"></i>Edit Profile
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3 text-center mb-4">
+                                {% if user.profile_image_url %}
+                                    <img src="{{ user.profile_image_url }}" alt="Profile" 
+                                         class="rounded-circle img-fluid mb-3" style="width: 150px; height: 150px; object-fit: cover;">
+                                {% else %}
+                                    <div class="bg-secondary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" 
+                                         style="width: 150px; height: 150px;">
+                                        <i class="fas fa-user fa-4x text-muted"></i>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="mb-2">
+                                    <span class="badge bg-{{ 'success' if user.user_type == 'seller' else 'primary' if user.user_type == 'admin' else 'secondary' }}">
+                                        {{ user.user_type.title() }}
+                                    </span>
+                                    {% if user.is_verified %}
+                                        <span class="badge bg-success">
+                                            <i class="fas fa-check-circle me-1"></i>Verified
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-9">
+                                <h4 class="fw-bold">{{ user.full_name }}</h4>
+                                {% if user.company %}
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-building me-2"></i>{{ user.company }}
+                                    </p>
+                                {% endif %}
+                                
+                                {% if user.location %}
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-map-marker-alt me-2"></i>{{ user.location }}
+                                    </p>
+                                {% endif %}
+                                
+                                {% if user.email %}
+                                    <p class="text-muted mb-2">
+                                        <i class="fas fa-envelope me-2"></i>{{ user.email }}
+                                    </p>
+                                {% endif %}
+                                
+                                <div class="mb-3">
+                                    {% if user.website %}
+                                        <a href="{{ user.website }}" target="_blank" class="btn btn-sm btn-outline-primary me-2">
+                                            <i class="fas fa-globe me-1"></i>Website
+                                        </a>
+                                    {% endif %}
+                                    {% if user.github_url %}
+                                        <a href="{{ user.github_url }}" target="_blank" class="btn btn-sm btn-outline-dark me-2">
+                                            <i class="fab fa-github me-1"></i>GitHub
+                                        </a>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if user.bio %}
+                                    <div class="mt-3">
+                                        <h6 class="fw-bold">About</h6>
+                                        <p class="text-muted">{{ user.bio }}</p>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if user.user_type == 'seller' %}
+                                    <div class="mt-3">
+                                        <h6 class="fw-bold">Seller Stats</h6>
+                                        <div class="row g-3">
+                                            <div class="col-sm-4">
+                                                <div class="text-center">
+                                                    <div class="h5 text-primary">{{ user.products|length }}</div>
+                                                    <small class="text-muted">Products</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4">
+                                                <div class="text-center">
+                                                    <div class="h5 text-warning">
+                                                        {% if user.average_rating > 0 %}
+                                                            {{ "%.1f"|format(user.average_rating) }}
+                                                        {% else %}
+                                                            N/A
+                                                        {% endif %}
+                                                    </div>
+                                                    <small class="text-muted">Rating</small>
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-4">
+                                                <div class="text-center">
+                                                    <div class="h5 text-success">{{ user.reviews_received|length }}</div>
+                                                    <small class="text-muted">Reviews</small>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                <div class="mt-3">
+                                    <small class="text-muted">
+                                        Member since {{ user.created_at.strftime('%B %Y') }}
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
