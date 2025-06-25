@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}Share Repository - {{ repository.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Share Repository</h3>
+                    <p class="text-muted mb-0">{{ repository.name }}</p>
+                </div>
+                <div class="card-body">
+                    <!-- Repository Link -->
+                    <div class="mb-4">
+                        <h5>Repository Link</h5>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="repo-url" value="{{ share_url }}" readonly>
+                            <button class="btn btn-outline-primary" onclick="copyToClipboard('repo-url')">
+                                <i class="fas fa-copy"></i> Copy
+                            </button>
+                        </div>
+                        <small class="text-muted">Share this link with collaborators to give them access to the repository</small>
+                    </div>
+
+                    <!-- Access Level -->
+                    <div class="mb-4">
+                        <h5>Current Access Level</h5>
+                        <div class="alert alert-{{ 'success' if repository.visibility == 'public' else 'warning' if repository.visibility == 'team' else 'info' }}">
+                            <i class="fas fa-{{ 'globe' if repository.visibility == 'public' else 'users' if repository.visibility == 'team' else 'lock' }}"></i>
+                            <strong>{{ repository.visibility.title() }}</strong>
+                            <p class="mb-0 mt-2">
+                                {% if repository.visibility == 'public' %}
+                                    Anyone can view this repository and its files. Perfect for open source projects.
+                                {% elif repository.visibility == 'team' %}
+                                    Only team members can access this repository. Great for collaborative team projects.
+                                {% else %}
+                                    Only project contributors can access this repository. Most secure option for private work.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Sharing Options -->
+                    <div class="mb-4">
+                        <h5>Sharing Options</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-users fa-2x text-primary mb-3"></i>
+                                        <h6>Invite to Team</h6>
+                                        <p class="small text-muted">Add collaborators to your team for full access</p>
+                                        <a href="{{ url_for('team_detail', team_id=repository.project.team.id) }}" class="btn btn-sm btn-primary">
+                                            Manage Team
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card h-100">
+                                    <div class="card-body text-center">
+                                        <i class="fas fa-project-diagram fa-2x text-success mb-3"></i>
+                                        <h6>Add to Project</h6>
+                                        <p class="small text-muted">Invite users as project contributors</p>
+                                        <a href="{{ url_for('project_detail', project_id=repository.project.id) }}" class="btn btn-sm btn-success">
+                                            Manage Project
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Code Sharing -->
+                    <div class="mb-4">
+                        <h5>Code Sharing</h5>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-code me-2"></i>Embed Code</h6>
+                                        <p class="small text-muted">Embed individual files in external websites</p>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="generateEmbedCode()">
+                                            Generate Embed
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6><i class="fas fa-download me-2"></i>Export Repository</h6>
+                                        <p class="small text-muted">Download all files as a ZIP archive</p>
+                                        <button class="btn btn-sm btn-outline-primary" onclick="exportRepository()">
+                                            Download ZIP
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Social Sharing -->
+                    <div class="mb-4">
+                        <h5>Social Sharing</h5>
+                        <div class="d-flex gap-2">
+                            <button class="btn btn-outline-primary" onclick="shareOnTwitter()">
+                                <i class="fab fa-twitter"></i> Twitter
+                            </button>
+                            <button class="btn btn-outline-primary" onclick="shareOnLinkedIn()">
+                                <i class="fab fa-linkedin"></i> LinkedIn
+                            </button>
+                            <button class="btn btn-outline-dark" onclick="shareOnGitHub()">
+                                <i class="fab fa-github"></i> GitHub
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('repository_detail', repo_id=repository.id) }}" class="btn btn-secondary">
+                            Back to Repository
+                        </a>
+                        <button class="btn btn-success" onclick="copyToClipboard('repo-url')">
+                            <i class="fas fa-share"></i> Copy Share Link
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyToClipboard(elementId) {
+    const element = document.getElementById(elementId);
+    element.select();
+    element.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(element.value).then(() => {
+        showAlert('Link copied to clipboard!', 'success');
+    });
+}
+
+function generateEmbedCode() {
+    const embedCode = `<iframe src="{{ url_for('repository_detail', repo_id=repository.id, _external=True) }}" width="100%" height="400" frameborder="0"></iframe>`;
+    navigator.clipboard.writeText(embedCode).then(() => {
+        showAlert('Embed code copied to clipboard!', 'success');
+    });
+}
+
+function exportRepository() {
+    window.location.href = `/api/repositories/{{ repository.id }}/export`;
+}
+
+function shareOnTwitter() {
+    const text = `Check out this repository: {{ repository.name }}`;
+    const url = `{{ url_for('repository_detail', repo_id=repository.id, _external=True) }}`;
+    window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`);
+}
+
+function shareOnLinkedIn() {
+    const url = `{{ url_for('repository_detail', repo_id=repository.id, _external=True) }}`;
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`);
+}
+
+function shareOnGitHub() {
+    // This would link to GitHub integration if implemented
+    showAlert('GitHub integration coming soon!', 'info');
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

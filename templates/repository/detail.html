@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block title %}{{ repository.name }} - Repository{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Repository Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb">
+                                    <li class="breadcrumb-item"><a href="{{ url_for('project_detail', project_id=repository.project.id) }}">{{ repository.project.name }}</a></li>
+                                    <li class="breadcrumb-item active">{{ repository.name }}</li>
+                                </ol>
+                            </nav>
+                            <h1 class="mb-2">
+                                <i class="fas fa-code-branch me-2"></i>{{ repository.name }}
+                            </h1>
+                            <p class="text-muted mb-3">{{ repository.description or "No description provided" }}</p>
+                            <div class="d-flex gap-3">
+                                <span class="badge bg-info">{{ repository.language or "Unknown" }}</span>
+                                <span class="badge bg-{{ 'success' if repository.visibility == 'public' else 'warning' if repository.visibility == 'team' else 'secondary' }}">{{ repository.visibility.title() }}</span>
+                                <span class="badge bg-light text-dark">{{ repository.files|length }} files</span>
+                            </div>
+                        </div>
+                        <div class="ms-auto">
+                            {% if current_user.is_authenticated %}
+                                <a href="{{ url_for('create_file', repo_id=repository.id) }}" class="btn btn-primary me-2">
+                                    <i class="fas fa-plus"></i> New File
+                                </a>
+                                <a href="{{ url_for('share_repository', repo_id=repository.id) }}" class="btn btn-outline-primary me-2">
+                                    <i class="fas fa-share"></i> Share
+                                </a>
+                                <a href="{{ url_for('collaborative_editor', project_id=repository.project.id) }}" class="btn btn-success">
+                                    <i class="fas fa-code"></i> Open Editor
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- File Listing -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Files</h5>
+                    <small class="text-muted">{{ repository.files|length }} files</small>
+                </div>
+                <div class="card-body p-0">
+                    {% if repository.files %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Language</th>
+                                    <th>Size</th>
+                                    <th>Last Modified</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in repository.files %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-file-code me-2 text-primary"></i>
+                                        <a href="{{ url_for('edit_file', repo_id=repository.id, file_id=file.id) }}" class="text-decoration-none">
+                                            {{ file.filename }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-secondary">{{ file.language.title() if file.language else 'Unknown' }}</span>
+                                    </td>
+                                    <td>{{ file.size or 0 }} bytes</td>
+                                    <td>{{ file.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                    <td>
+                                        <a href="{{ url_for('edit_file', repo_id=repository.id, file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="downloadFile({{ file.id }})">
+                                            <i class="fas fa-download"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-file-plus fa-3x text-muted mb-3"></i>
+                        <h4 class="text-muted">No files yet</h4>
+                        <p class="text-muted">Start by creating your first file in this repository</p>
+                        {% if current_user.is_authenticated %}
+                            <a href="{{ url_for('create_file', repo_id=repository.id) }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Create First File
+                            </a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Repository Info -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Repository Info</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Project:</strong><br>
+                        <a href="{{ url_for('project_detail', project_id=repository.project.id) }}" class="text-decoration-none">
+                            {{ repository.project.name }}
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Team:</strong><br>
+                        <a href="{{ url_for('team_detail', team_id=repository.project.team.id) }}" class="text-decoration-none">
+                            {{ repository.project.team.name }}
+                        </a>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Primary Language:</strong><br>
+                        <span class="text-muted">{{ repository.language or "Not specified" }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Visibility:</strong><br>
+                        <span class="badge bg-{{ 'success' if repository.visibility == 'public' else 'warning' if repository.visibility == 'team' else 'secondary' }}">
+                            {{ repository.visibility.title() }}
+                        </span>
+                    </div>
+                    <div class="mb-0">
+                        <strong>Created:</strong><br>
+                        <span class="text-muted">{{ repository.created_at.strftime('%B %d, %Y') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Quick Actions</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{{ url_for('collaborative_editor', project_id=repository.project.id) }}" class="btn btn-success">
+                            <i class="fas fa-code me-2"></i>Open Collaborative Editor
+                        </a>
+                        <a href="{{ url_for('create_file', repo_id=repository.id) }}" class="btn btn-primary">
+                            <i class="fas fa-plus me-2"></i>Add New File
+                        </a>
+                        <button class="btn btn-outline-primary" onclick="cloneRepository()">
+                            <i class="fas fa-clone me-2"></i>Clone Repository
+                        </button>
+                        <a href="{{ url_for('share_repository', repo_id=repository.id) }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-share me-2"></i>Share Repository
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function downloadFile(fileId) {
+    fetch(`/api/files/${fileId}/download`)
+        .then(response => response.blob())
+        .then(blob => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+            a.download = 'file';
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+        });
+}
+
+function cloneRepository() {
+    const repoUrl = `{{ url_for('repository_detail', repo_id=repository.id, _external=True) }}`;
+    navigator.clipboard.writeText(repoUrl).then(() => {
+        alert('Repository URL copied to clipboard!\nYou can use this URL to access the repository.');
+    });
+}
+</script>
+{% endblock %}

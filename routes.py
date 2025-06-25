@@ -844,6 +844,112 @@ def send_chat_message():
     return jsonify({'success': False})
 
 
+# Repository and File Management Routes
+@app.route('/repositories/<int:repo_id>')
+def repository_detail(repo_id):
+    """View repository details and files"""
+    repository = Repository.query.get_or_404(repo_id)
+    return render_template('repository/detail.html', repository=repository)
+
+
+@app.route('/repositories/<int:repo_id>/files/new', methods=['GET', 'POST'])
+@app.route('/repositories/<int:repo_id>/files/<int:file_id>/edit', methods=['GET', 'POST'])
+@require_login
+def edit_file(repo_id, file_id=None):
+    """Create or edit a file in repository"""
+    repository = Repository.query.get_or_404(repo_id)
+    file = RepositoryFile.query.get(file_id) if file_id else None
+    
+    # Check access permissions
+    project = repository.project
+    is_contributor = ProjectContributor.query.filter_by(
+        project_id=project.id, 
+        user_id=current_user.id
+    ).first()
+    
+    is_team_member = TeamMember.query.filter_by(
+        team_id=project.team_id,
+        user_id=current_user.id
+    ).first()
+    
+    if not (is_contributor or is_team_member):
+        flash('You do not have access to edit files in this repository.', 'error')
+        return redirect(url_for('repository_detail', repo_id=repo_id))
+    
+    form = FileForm(obj=file)
+    
+    # Pre-fill filename from query parameter for new files
+    if not file and request.args.get('filename'):
+        form.filename.data = request.args.get('filename')
+        form.filepath.data = request.args.get('filename')
+    
+    if form.validate_on_submit():
+        if not file:
+            file = RepositoryFile(repository_id=repo_id)
+        
+        file.filename = form.filename.data
+        file.filepath = form.filepath.data or form.filename.data
+        file.content = form.content.data
+        file.language = form.language.data
+        file.size = len(form.content.data.encode('utf-8'))
+        
+        db.session.add(file)
+        db.session.commit()
+        
+        flash('File saved successfully!', 'success')
+        return redirect(url_for('edit_file', repo_id=repo_id, file_id=file.id))
+    
+    return render_template('repository/file_editor.html', 
+                         repository=repository, 
+                         file=file, 
+                         form=form)
+
+
+@app.route('/repositories/<int:repo_id>/files/create', methods=['GET', 'POST'])
+@require_login
+def create_file(repo_id):
+    """Create a new file in repository"""
+    return edit_file(repo_id, None)
+
+
+@app.route('/api/files/<int:file_id>', methods=['DELETE'])
+@require_login
+def delete_file_api(file_id):
+    """Delete a file"""
+    file = RepositoryFile.query.get_or_404(file_id)
+    
+    # Check permissions
+    project = file.repository.project
+    is_contributor = ProjectContributor.query.filter_by(
+        project_id=project.id, 
+        user_id=current_user.id
+    ).first()
+    
+    if not is_contributor:
+        return jsonify({'success': False, 'message': 'No access'})
+    
+    db.session.delete(file)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'File deleted'})
+
+
+@app.route('/repositories/<int:repo_id>/share')
+@require_login
+def share_repository(repo_id):
+    """Share repository with others"""
+    repository = Repository.query.get_or_404(repo_id)
+    
+    # Generate shareable link based on visibility
+    if repository.visibility == 'public':
+        share_url = url_for('repository_detail', repo_id=repo_id, _external=True)
+    else:
+        # For private repos, could generate time-limited tokens
+        share_url = f"Repository '{repository.name}' is private. Add collaborators to your team to share access."
+    
+    return render_template('repository/share.html', repository=repository, share_url=share_url)
+
+
 # Additional API endpoints for project management
 @app.route('/api/projects/<int:project_id>/join', methods=['POST'])
 @require_login
