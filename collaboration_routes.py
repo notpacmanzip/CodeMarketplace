@@ -112,7 +112,8 @@ def create_repository(project_id=None):
             description=form.description.data,
             project_id=project_id,
             owner_id=current_user.id,
-            is_private=form.is_private.data,
+            visibility=form.visibility.data,
+            is_private=(form.visibility.data == 'private'),
             default_branch=form.default_branch.data
         )
         
@@ -132,14 +133,9 @@ def repository_detail(repo_id):
     """View repository details and files"""
     repository = CodeRepository.query.get_or_404(repo_id)
     
-    # Check access permissions
-    is_contributor = ProjectContributor.query.filter_by(
-        project_id=repository.project_id, user_id=current_user.id
-    ).first()
-    
-    if not is_contributor and repository.owner_id != current_user.id:
-        if repository.is_private or not repository.project.is_public:
-            abort(403)
+    # Check access permissions using new visibility system
+    if not repository.can_access(current_user):
+        abort(403)
     
     # Get files
     files = CodeFile.query.filter_by(
@@ -167,12 +163,8 @@ def create_file(repo_id):
     """Create a new file in repository"""
     repository = CodeRepository.query.get_or_404(repo_id)
     
-    # Check write permissions
-    is_contributor = ProjectContributor.query.filter_by(
-        project_id=repository.project_id, user_id=current_user.id
-    ).first()
-    
-    if not is_contributor and repository.owner_id != current_user.id:
+    # Check write permissions using new visibility system
+    if not repository.can_edit(current_user):
         abort(403)
     
     form = CodeFileForm()

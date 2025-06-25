@@ -6,7 +6,11 @@ from wtforms.validators import DataRequired, Length, NumberRange, Optional
 class CodeRepositoryForm(FlaskForm):
     name = StringField('Repository Name', validators=[DataRequired(), Length(min=3, max=200)])
     description = TextAreaField('Description', validators=[Length(max=1000)])
-    is_private = BooleanField('Private Repository', default=False)
+    visibility = SelectField('Visibility', choices=[
+        ('private', 'Private - Only you can access'),
+        ('team', 'Team - Share with team members'),
+        ('public', 'Public - Visible to everyone')
+    ], default='private', validators=[DataRequired()])
     default_branch = StringField('Default Branch', validators=[Length(max=100)], default='main')
     submit = SubmitField('Create Repository')
 

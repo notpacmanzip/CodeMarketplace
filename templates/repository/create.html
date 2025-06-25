@@ -55,17 +55,22 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <div class="form-check">
-                                        {{ form.is_private(class="form-check-input") }}
-                                        {{ form.is_private.label(class="form-check-label") }}
-                                    </div>
-                                    {% if form.is_private.errors %}
+                                    {{ form.visibility.label(class="form-label") }}
+                                    {{ form.visibility(class="form-select") }}
+                                    {% if form.visibility.errors %}
                                         <div class="text-danger">
-                                            {% for error in form.is_private.errors %}
+                                            {% for error in form.visibility.errors %}
                                                 <small>{{ error }}</small>
                                             {% endfor %}
                                         </div>
                                     {% endif %}
+                                    <div class="form-text">
+                                        <small class="text-muted">
+                                            <i class="fas fa-lock me-1"></i><strong>Private:</strong> Only you can access<br>
+                                            <i class="fas fa-users me-1"></i><strong>Team:</strong> Share with team members<br>
+                                            <i class="fas fa-globe me-1"></i><strong>Public:</strong> Visible to everyone
+                                        </small>
+                                    </div>
                                 </div>
                             </div>
                         </div>

@@ -11,6 +11,7 @@ class CodeRepository(db.Model):
     
     # Repository settings
     is_private = db.Column(db.Boolean, default=False)
+    visibility = db.Column(db.String(20), default='private')  # 'private', 'public', 'team'
     default_branch = db.Column(db.String(100), default='main')
     
     # Foreign keys
@@ -25,6 +26,54 @@ class CodeRepository(db.Model):
     project = db.relationship('Project', backref='code_repositories')
     files = db.relationship('CodeFile', backref='repository', lazy=True, cascade='all, delete-orphan')
     commits = db.relationship('CodeCommit', backref='repository', lazy=True, cascade='all, delete-orphan')
+    
+    def can_access(self, user):
+        """Check if user can access this repository based on visibility"""
+        if not user:
+            return self.visibility == 'public'
+        
+        # Owner always has access
+        if self.owner_id == user.id:
+            return True
+        
+        # Public repositories - everyone can view
+        if self.visibility == 'public':
+            return True
+        
+        # Team repositories - team members can access
+        if self.visibility == 'team':
+            from models import TeamMember
+            team_member = TeamMember.query.filter_by(
+                team_id=self.project.team_id,
+                user_id=user.id,
+                is_active=True
+            ).first()
+            return team_member is not None
+        
+        # Private repositories - only owner
+        return False
+    
+    def can_edit(self, user):
+        """Check if user can edit this repository"""
+        if not user:
+            return False
+        
+        # Owner always can edit
+        if self.owner_id == user.id:
+            return True
+        
+        # Team members can edit team repositories
+        if self.visibility == 'team':
+            from models import TeamMember
+            team_member = TeamMember.query.filter_by(
+                team_id=self.project.team_id,
+                user_id=user.id,
+                is_active=True
+            ).first()
+            return team_member is not None
+        
+        # Public repositories are read-only for non-owners
+        return False
 
 class CodeFile(db.Model):
     __tablename__ = 'code_files'
