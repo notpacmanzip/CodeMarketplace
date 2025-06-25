@@ -181,3 +181,256 @@ class Purchase(db.Model):
     payment_status = db.Column(db.String(20), default='completed')  # pending, completed, failed, refunded
     
     created_at = db.Column(db.DateTime, default=datetime.now)
+
+
+# Collaborative Coding Platform Models
+
+class Team(db.Model):
+    __tablename__ = 'teams'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    avatar_url = db.Column(db.String(500))
+    
+    owner_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    is_public = db.Column(db.Boolean, default=True)
+    max_members = db.Column(db.Integer, default=10)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    owner = db.relationship('User', backref='owned_teams')
+    members = db.relationship('TeamMember', backref='team', cascade='all, delete-orphan')
+    projects = db.relationship('Project', backref='team', cascade='all, delete-orphan')
+
+
+class TeamMember(db.Model):
+    __tablename__ = 'team_members'
+    id = db.Column(db.Integer, primary_key=True)
+    team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    role = db.Column(db.String(50), default='member')  # owner, admin, member, contributor
+    joined_at = db.Column(db.DateTime, default=datetime.now)
+    
+    # Unique constraint
+    __table_args__ = (db.UniqueConstraint('team_id', 'user_id', name='unique_team_member'),)
+    
+    user = db.relationship('User', backref='team_memberships')
+
+
+class Project(db.Model):
+    __tablename__ = 'projects'
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    requirements = db.Column(db.Text)  # Project goals and requirements
+    
+    team_id = db.Column(db.Integer, db.ForeignKey('teams.id'), nullable=False)
+    owner_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    status = db.Column(db.String(50), default='planning')  # planning, active, completed, paused, cancelled
+    priority = db.Column(db.String(20), default='medium')  # low, medium, high, critical
+    
+    budget = db.Column(db.Numeric(10, 2))
+    currency = db.Column(db.String(3), default='USD')
+    payment_model = db.Column(db.String(50), default='milestone')  # milestone, hourly, fixed, equity
+    
+    start_date = db.Column(db.DateTime)
+    due_date = db.Column(db.DateTime)
+    completed_date = db.Column(db.DateTime)
+    
+    is_public = db.Column(db.Boolean, default=False)
+    tags = db.Column(db.String(500))  # Comma-separated
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    owner = db.relationship('User', backref='owned_projects')
+    contributors = db.relationship('ProjectContributor', backref='project', cascade='all, delete-orphan')
+    milestones = db.relationship('Milestone', backref='project', cascade='all, delete-orphan')
+    repositories = db.relationship('Repository', backref='project', cascade='all, delete-orphan')
+    collaborations = db.relationship('CollaborationSession', backref='project', cascade='all, delete-orphan')
+
+
+class ProjectContributor(db.Model):
+    __tablename__ = 'project_contributors'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    role = db.Column(db.String(50), default='contributor')  # lead, developer, designer, tester, reviewer
+    contribution_percentage = db.Column(db.Numeric(5, 2), default=0)  # For payment distribution
+    hours_logged = db.Column(db.Numeric(8, 2), default=0)
+    
+    joined_at = db.Column(db.DateTime, default=datetime.now)
+    
+    __table_args__ = (db.UniqueConstraint('project_id', 'user_id', name='unique_project_contributor'),)
+    
+    user = db.relationship('User', backref='project_contributions')
+
+
+class Milestone(db.Model):
+    __tablename__ = 'milestones'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    requirements = db.Column(db.Text)
+    
+    status = db.Column(db.String(50), default='pending')  # pending, in_progress, completed, cancelled
+    payment_amount = db.Column(db.Numeric(10, 2))
+    
+    due_date = db.Column(db.DateTime)
+    completed_date = db.Column(db.DateTime)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class Repository(db.Model):
+    __tablename__ = 'repositories'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    
+    visibility = db.Column(db.String(20), default='private')  # public, private, team
+    language = db.Column(db.String(50))
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    # Relationships
+    files = db.relationship('RepositoryFile', backref='repository', cascade='all, delete-orphan')
+    commits = db.relationship('Commit', backref='repository', cascade='all, delete-orphan')
+
+
+class RepositoryFile(db.Model):
+    __tablename__ = 'repository_files'
+    id = db.Column(db.Integer, primary_key=True)
+    repository_id = db.Column(db.Integer, db.ForeignKey('repositories.id'), nullable=False)
+    
+    filename = db.Column(db.String(500), nullable=False)
+    filepath = db.Column(db.String(1000), nullable=False)
+    content = db.Column(db.Text)
+    language = db.Column(db.String(50))
+    
+    size = db.Column(db.Integer, default=0)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+
+
+class Commit(db.Model):
+    __tablename__ = 'commits'
+    id = db.Column(db.Integer, primary_key=True)
+    repository_id = db.Column(db.Integer, db.ForeignKey('repositories.id'), nullable=False)
+    author_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    hash = db.Column(db.String(40), unique=True, nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    changes_summary = db.Column(db.Text)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    
+    author = db.relationship('User', backref='commits')
+
+
+class CollaborationSession(db.Model):
+    __tablename__ = 'collaboration_sessions'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    host_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    title = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    
+    session_type = db.Column(db.String(50), default='coding')  # coding, review, planning, discussion
+    status = db.Column(db.String(20), default='scheduled')  # scheduled, active, completed, cancelled
+    
+    max_participants = db.Column(db.Integer, default=5)
+    
+    scheduled_at = db.Column(db.DateTime)
+    started_at = db.Column(db.DateTime)
+    ended_at = db.Column(db.DateTime)
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    
+    host = db.relationship('User', backref='hosted_sessions')
+    participants = db.relationship('SessionParticipant', backref='session', cascade='all, delete-orphan')
+    chat_messages = db.relationship('SessionChatMessage', backref='session', cascade='all, delete-orphan')
+
+
+class SessionParticipant(db.Model):
+    __tablename__ = 'session_participants'
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('collaboration_sessions.id'), nullable=False)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    role = db.Column(db.String(50), default='participant')  # host, co-host, participant, observer
+    joined_at = db.Column(db.DateTime, default=datetime.now)
+    left_at = db.Column(db.DateTime)
+    
+    __table_args__ = (db.UniqueConstraint('session_id', 'user_id', name='unique_session_participant'),)
+    
+    user = db.relationship('User', backref='session_participations')
+
+
+class SessionChatMessage(db.Model):
+    __tablename__ = 'session_chat_messages'
+    id = db.Column(db.Integer, primary_key=True)
+    session_id = db.Column(db.Integer, db.ForeignKey('collaboration_sessions.id'), nullable=False)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    message = db.Column(db.Text, nullable=False)
+    message_type = db.Column(db.String(20), default='text')  # text, code, file, system
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    
+    user = db.relationship('User', backref='session_messages')
+
+
+class Payment(db.Model):
+    __tablename__ = 'payments'
+    id = db.Column(db.Integer, primary_key=True)
+    project_id = db.Column(db.Integer, db.ForeignKey('projects.id'), nullable=False)
+    recipient_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    milestone_id = db.Column(db.Integer, db.ForeignKey('milestones.id'), nullable=True)
+    
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    currency = db.Column(db.String(3), default='USD')
+    
+    payment_type = db.Column(db.String(50), default='milestone')  # milestone, bonus, hourly, final
+    status = db.Column(db.String(20), default='pending')  # pending, processing, completed, failed, cancelled
+    
+    description = db.Column(db.Text)
+    transaction_id = db.Column(db.String(100))
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
+    
+    project = db.relationship('Project', backref='payments')
+    recipient = db.relationship('User', backref='received_payments')
+    milestone = db.relationship('Milestone', backref='payments')
+
+
+class Notification(db.Model):
+    __tablename__ = 'notifications'
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.String, db.ForeignKey('users.id'), nullable=False)
+    
+    title = db.Column(db.String(200), nullable=False)
+    message = db.Column(db.Text, nullable=False)
+    notification_type = db.Column(db.String(50), default='info')  # info, success, warning, error, payment, project
+    
+    is_read = db.Column(db.Boolean, default=False)
+    link_url = db.Column(db.String(500))
+    
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    
+    user = db.relationship('User', backref='notifications')

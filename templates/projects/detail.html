@@ -1,0 +1,280 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Project Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h1 class="mb-2">{{ project.name }}</h1>
+                            <p class="text-muted mb-3">{{ project.description }}</p>
+                            <div class="d-flex align-items-center gap-3 mb-3">
+                                <span class="badge bg-{{ 'success' if project.status == 'active' else 'warning' if project.status == 'planning' else 'info' }}">{{ project.status.title() }}</span>
+                                <span class="badge bg-{{ 'danger' if project.priority == 'critical' else 'warning' if project.priority == 'high' else 'info' }}">{{ project.priority.title() }}</span>
+                                {% if project.budget %}
+                                    <span class="badge bg-secondary">Budget: ${{ "%.2f"|format(project.budget) }}</span>
+                                {% endif %}
+                                <span class="text-muted">Team: <a href="{{ url_for('team_detail', team_id=project.team.id) }}" class="text-decoration-none">{{ project.team.name }}</a></span>
+                            </div>
+                            {% if project.tags %}
+                                <div class="mb-2">
+                                    {% for tag in project.tags.split(',') %}
+                                        <span class="badge bg-light text-dark me-1">#{{ tag.strip() }}</span>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="ms-auto">
+                            {% if current_user.is_authenticated %}
+                                {% set user_contributor = project.contributors|selectattr('user_id', 'equalto', current_user.id)|first %}
+                                {% set user_team_member = project.team.members|selectattr('user_id', 'equalto', current_user.id)|first %}
+                                
+                                {% if user_contributor or user_team_member %}
+                                    <a href="{{ url_for('collaborative_editor', project_id=project.id) }}" class="btn btn-primary me-2">
+                                        <i class="fas fa-code"></i> Collaborate
+                                    </a>
+                                    <a href="{{ url_for('create_repository', project_id=project.id) }}" class="btn btn-outline-primary">
+                                        <i class="fas fa-plus"></i> New Repo
+                                    </a>
+                                {% elif project.is_public %}
+                                    <button class="btn btn-success" onclick="joinProject({{ project.id }})">
+                                        <i class="fas fa-user-plus"></i> Join Project
+                                    </button>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-md-8">
+            <!-- Requirements -->
+            {% if project.requirements %}
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Project Requirements</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">{{ project.requirements|nl2br }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Repositories -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Repositories</h5>
+                    {% if current_user.is_authenticated and (user_contributor or user_team_member) %}
+                        <a href="{{ url_for('create_repository', project_id=project.id) }}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-plus"></i> New Repository
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% for repo in project.repositories %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">
+                                    <i class="fas fa-code-branch me-2"></i>{{ repo.name }}
+                                </h6>
+                                <p class="text-muted small mb-2">{{ repo.description or "No description" }}</p>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-info">{{ repo.language or "Unknown" }}</span>
+                                    <span class="badge bg-secondary">{{ repo.visibility.title() }}</span>
+                                    <span class="badge bg-light text-dark">{{ repo.files|length }} files</span>
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ repo.updated_at.strftime('%b %d, %Y') }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-code-branch fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No repositories yet. Create the first one to start coding!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Milestones -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Milestones</h5>
+                    {% if current_user.is_authenticated and (user_contributor or user_team_member) %}
+                        <button class="btn btn-sm btn-primary" onclick="createMilestone({{ project.id }})">
+                            <i class="fas fa-plus"></i> Add Milestone
+                        </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% for milestone in project.milestones %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">{{ milestone.title }}</h6>
+                                <p class="text-muted small mb-2">{{ milestone.description or "No description" }}</p>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-{{ 'success' if milestone.status == 'completed' else 'warning' if milestone.status == 'in_progress' else 'secondary' }}">{{ milestone.status.replace('_', ' ').title() }}</span>
+                                    {% if milestone.payment_amount %}
+                                        <span class="badge bg-success">${{ "%.2f"|format(milestone.payment_amount) }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="text-end">
+                                {% if milestone.due_date %}
+                                    <small class="text-muted">Due: {{ milestone.due_date.strftime('%b %d, %Y') }}</small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-flag-checkered fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No milestones set. Add milestones to track progress!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Project Info -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Project Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Owner:</strong><br>
+                        <span class="text-muted">{{ project.owner.full_name() or project.owner.email }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <strong>Payment Model:</strong><br>
+                        <span class="text-muted">{{ project.payment_model.replace('_', ' ').title() }}</span>
+                    </div>
+                    {% if project.start_date %}
+                    <div class="mb-3">
+                        <strong>Start Date:</strong><br>
+                        <span class="text-muted">{{ project.start_date.strftime('%B %d, %Y') }}</span>
+                    </div>
+                    {% endif %}
+                    {% if project.due_date %}
+                    <div class="mb-3">
+                        <strong>Due Date:</strong><br>
+                        <span class="text-muted">{{ project.due_date.strftime('%B %d, %Y') }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="mb-0">
+                        <strong>Created:</strong><br>
+                        <span class="text-muted">{{ project.created_at.strftime('%B %d, %Y') }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contributors -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Contributors</h5>
+                </div>
+                <div class="card-body">
+                    {% for contributor in project.contributors %}
+                    <div class="d-flex align-items-center mb-3">
+                        {% if contributor.user.profile_image_url %}
+                            <img src="{{ contributor.user.profile_image_url }}" alt="Profile" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">{{ contributor.user.full_name() or contributor.user.email }}</div>
+                            <small class="text-muted">{{ contributor.role.title() }}</small>
+                        </div>
+                        {% if contributor.hours_logged > 0 %}
+                            <small class="text-muted">{{ contributor.hours_logged }}h</small>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Active Sessions -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Active Sessions</h5>
+                </div>
+                <div class="card-body">
+                    {% for session in project.collaborations %}
+                        {% if session.status == 'active' %}
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                            <div>
+                                <div class="fw-semibold">{{ session.title }}</div>
+                                <small class="text-muted">{{ session.participants|length }} participants</small>
+                            </div>
+                            <a href="{{ url_for('collaborative_editor', project_id=project.id) }}" class="btn btn-sm btn-outline-primary">Join</a>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                    <div class="text-center py-3 text-muted">
+                        <i class="fas fa-users fa-2x mb-2"></i>
+                        <p class="small">No active sessions</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function joinProject(projectId) {
+    if (confirm('Join this project as a contributor?')) {
+        fetch(`/api/projects/${projectId}/join`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Failed to join project');
+            }
+        });
+    }
+}
+
+function createMilestone(projectId) {
+    // Simple milestone creation - in a real app, this would be a modal or separate page
+    const title = prompt('Milestone title:');
+    if (title) {
+        fetch(`/api/projects/${projectId}/milestones`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ title: title })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+}
+</script>
+{% endblock %}

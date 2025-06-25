@@ -1,0 +1,200 @@
+{% extends "base.html" %}
+
+{% block title %}Collaborative Dashboard{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="mb-3">Welcome back, {{ current_user.first_name or current_user.email.split('@')[0] }}!</h1>
+            <p class="text-muted">Your collaborative coding workspace</p>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-users fa-2x text-primary mb-3"></i>
+                    <h5>Create Team</h5>
+                    <p class="small text-muted">Start collaborating with others</p>
+                    <a href="{{ url_for('create_team') }}" class="btn btn-primary btn-sm">Create Team</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-project-diagram fa-2x text-success mb-3"></i>
+                    <h5>New Project</h5>
+                    <p class="small text-muted">Launch a new collaborative project</p>
+                    <a href="{{ url_for('create_project') }}" class="btn btn-success btn-sm">Start Project</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-code fa-2x text-info mb-3"></i>
+                    <h5>Browse Projects</h5>
+                    <p class="small text-muted">Join existing projects</p>
+                    <a href="{{ url_for('projects_list') }}" class="btn btn-info btn-sm">Browse</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center h-100">
+                <div class="card-body">
+                    <i class="fas fa-handshake fa-2x text-warning mb-3"></i>
+                    <h5>Find Teams</h5>
+                    <p class="small text-muted">Join coding communities</p>
+                    <a href="{{ url_for('teams_list') }}" class="btn btn-warning btn-sm">Find Teams</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Your Projects -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Your Active Projects</h5>
+                    <a href="{{ url_for('projects_list') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% for project in projects %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{{ url_for('project_detail', project_id=project.id) }}" class="text-decoration-none">{{ project.name }}</a>
+                                </h6>
+                                <p class="text-muted small mb-2">{{ project.description[:80] }}{% if project.description|length > 80 %}...{% endif %}</p>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-{{ 'success' if project.status == 'active' else 'warning' if project.status == 'planning' else 'info' }}">{{ project.status.title() }}</span>
+                                    <small class="text-muted">Team: {{ project.team.name }}</small>
+                                    <small class="text-muted">{{ project.contributors|length }} contributors</small>
+                                </div>
+                            </div>
+                            <div class="ms-auto">
+                                <a href="{{ url_for('collaborative_editor', project_id=project.id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-code"></i> Code
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-project-diagram fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No active projects</h5>
+                        <p class="text-muted">Create your first project or join an existing one</p>
+                        <a href="{{ url_for('create_project') }}" class="btn btn-primary me-2">Create Project</a>
+                        <a href="{{ url_for('projects_list') }}" class="btn btn-outline-primary">Browse Projects</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Your Teams -->
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Your Teams</h5>
+                    <a href="{{ url_for('teams_list') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% for team in teams %}
+                    <div class="d-flex align-items-center mb-3">
+                        {% if team.avatar_url %}
+                            <img src="{{ team.avatar_url }}" alt="Team Avatar" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-users text-white"></i>
+                            </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">
+                                <a href="{{ url_for('team_detail', team_id=team.id) }}" class="text-decoration-none">{{ team.name }}</a>
+                            </h6>
+                            <small class="text-muted">{{ team.members|length }} members • {{ team.projects|length }} projects</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">No teams yet</h5>
+                        <p class="text-muted">Create or join a team to start collaborating</p>
+                        <a href="{{ url_for('create_team') }}" class="btn btn-primary me-2">Create Team</a>
+                        <a href="{{ url_for('teams_list') }}" class="btn btn-outline-primary">Find Teams</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Notifications -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    {% for notification in notifications %}
+                    <div class="d-flex align-items-start mb-3">
+                        <div class="me-3">
+                            <i class="fas fa-{{ 'dollar-sign' if notification.notification_type == 'payment' else 'project-diagram' if notification.notification_type == 'project' else 'bell' }} text-{{ 'success' if notification.notification_type == 'success' else 'info' }}"></i>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold small">{{ notification.title }}</div>
+                            <p class="text-muted small mb-1">{{ notification.message }}</p>
+                            <small class="text-muted">{{ notification.created_at.strftime('%b %d, %H:%M') }}</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-3 text-muted">
+                        <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                        <p class="small">No recent activity</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Your Stats</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-primary">{{ projects|length }}</h4>
+                                <small class="text-muted">Projects</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success">{{ teams|length }}</h4>
+                            <small class="text-muted">Teams</small>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-info">0</h4>
+                                <small class="text-muted">Commits</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-warning">0h</h4>
+                            <small class="text-muted">Hours</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

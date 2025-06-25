@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}{{ team.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <!-- Team Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex align-items-center">
+                        {% if team.avatar_url %}
+                            <img src="{{ team.avatar_url }}" alt="Team Avatar" class="rounded-circle me-4" style="width: 80px; height: 80px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-4" style="width: 80px; height: 80px;">
+                                <i class="fas fa-users fa-2x text-white"></i>
+                            </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <h1 class="mb-2">{{ team.name }}</h1>
+                            <p class="text-muted mb-2">{{ team.description or "No description provided" }}</p>
+                            <div class="d-flex align-items-center gap-3">
+                                {% if team.is_public %}
+                                    <span class="badge bg-success">Public Team</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Private Team</span>
+                                {% endif %}
+                                <span class="text-muted">{{ team.members|length }} / {{ team.max_members }} members</span>
+                                <span class="text-muted">{{ team.projects|length }} projects</span>
+                                <span class="text-muted">Created {{ team.created_at.strftime('%B %d, %Y') }}</span>
+                            </div>
+                        </div>
+                        <div class="ms-auto">
+                            {% if current_user.is_authenticated %}
+                                {% set user_member = team.members|selectattr('user_id', 'equalto', current_user.id)|first %}
+                                {% if user_member %}
+                                    {% if user_member.role in ['owner', 'admin'] %}
+                                        <a href="{{ url_for('edit_team', team_id=team.id) }}" class="btn btn-outline-primary me-2">Edit Team</a>
+                                    {% endif %}
+                                    <a href="{{ url_for('create_project', team_id=team.id) }}" class="btn btn-primary">New Project</a>
+                                {% else %}
+                                    {% if team.members|length < team.max_members and team.is_public %}
+                                        <form method="POST" action="{{ url_for('join_team', team_id=team.id) }}" class="d-inline">
+                                            <button type="submit" class="btn btn-success">Join Team</button>
+                                        </form>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Projects Section -->
+        <div class="col-md-8 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Projects</h5>
+                    {% if current_user.is_authenticated and team.members|selectattr('user_id', 'equalto', current_user.id)|first %}
+                        <a href="{{ url_for('create_project', team_id=team.id) }}" class="btn btn-sm btn-primary">New Project</a>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% for project in team.projects %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{{ url_for('project_detail', project_id=project.id) }}" class="text-decoration-none">{{ project.name }}</a>
+                                </h6>
+                                <p class="text-muted small mb-2">{{ project.description[:100] }}{% if project.description|length > 100 %}...{% endif %}</p>
+                                <div class="d-flex gap-2">
+                                    <span class="badge bg-{{ 'success' if project.status == 'active' else 'warning' if project.status == 'planning' else 'info' }}">{{ project.status.title() }}</span>
+                                    <span class="badge bg-{{ 'danger' if project.priority == 'critical' else 'warning' if project.priority == 'high' else 'info' }}">{{ project.priority.title() }}</span>
+                                    {% if project.budget %}
+                                        <span class="badge bg-secondary">${{ "%.2f"|format(project.budget) }}</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ project.contributors|length }} contributors</small>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-4">
+                        <i class="fas fa-project-diagram fa-2x text-muted mb-3"></i>
+                        <p class="text-muted">No projects yet. Start your first collaborative project!</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Members Section -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Team Members</h5>
+                </div>
+                <div class="card-body">
+                    {% for member in team.members %}
+                    <div class="d-flex align-items-center mb-3">
+                        {% if member.user.profile_image_url %}
+                            <img src="{{ member.user.profile_image_url }}" alt="Profile" class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
+                        {% else %}
+                            <div class="bg-secondary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                <i class="fas fa-user text-white"></i>
+                            </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold">{{ member.user.full_name() or member.user.email }}</div>
+                            <small class="text-muted">{{ member.role.title() }}</small>
+                        </div>
+                        {% if member.role == 'owner' %}
+                            <i class="fas fa-crown text-warning" title="Team Owner"></i>
+                        {% elif member.role == 'admin' %}
+                            <i class="fas fa-shield-alt text-info" title="Team Admin"></i>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Recent Activity</h5>
+                </div>
+                <div class="card-body">
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-clock fa-2x mb-3"></i>
+                        <p>Activity feed coming soon</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

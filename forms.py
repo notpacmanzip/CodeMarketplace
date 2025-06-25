@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileAllowed
-from wtforms import StringField, TextAreaField, SelectField, DecimalField, BooleanField, IntegerField, HiddenField
+from wtforms import StringField, TextAreaField, SelectField, DecimalField, BooleanField, IntegerField, HiddenField, SubmitField, DateTimeLocalField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, URL, Optional
 
 class ProfileForm(FlaskForm):
@@ -62,3 +62,144 @@ class SearchForm(FlaskForm):
         ('rating', 'Highest Rated'),
         ('popular', 'Most Popular')
     ], default='newest')
+
+
+# Collaborative Platform Forms
+
+class TeamForm(FlaskForm):
+    name = StringField('Team Name', validators=[DataRequired(), Length(min=3, max=200)])
+    description = TextAreaField('Description', validators=[Length(max=1000)])
+    is_public = BooleanField('Public Team', default=True)
+    max_members = SelectField('Maximum Members', choices=[(5, '5'), (10, '10'), (20, '20'), (50, '50')], 
+                             coerce=int, default=10, validators=[DataRequired()])
+    avatar = FileField('Team Avatar', validators=[FileAllowed(['jpg', 'png', 'gif'], 'Images only!')])
+    submit = SubmitField('Create Team')
+
+
+class ProjectForm(FlaskForm):
+    name = StringField('Project Name', validators=[DataRequired(), Length(min=3, max=200)])
+    description = TextAreaField('Description', validators=[DataRequired(), Length(min=10, max=2000)])
+    requirements = TextAreaField('Requirements & Goals', validators=[Length(max=3000)])
+    team_id = SelectField('Team', coerce=int, validators=[DataRequired()])
+    
+    priority = SelectField('Priority', choices=[
+        ('low', 'Low'),
+        ('medium', 'Medium'), 
+        ('high', 'High'),
+        ('critical', 'Critical')
+    ], default='medium', validators=[DataRequired()])
+    
+    budget = DecimalField('Budget (USD)', validators=[Optional(), NumberRange(min=0)])
+    payment_model = SelectField('Payment Model', choices=[
+        ('milestone', 'Milestone-based'),
+        ('hourly', 'Hourly Rate'),
+        ('fixed', 'Fixed Price'),
+        ('equity', 'Equity Share')
+    ], default='milestone', validators=[DataRequired()])
+    
+    start_date = DateTimeLocalField('Start Date', validators=[Optional()])
+    due_date = DateTimeLocalField('Due Date', validators=[Optional()])
+    
+    is_public = BooleanField('Public Project', default=False)
+    tags = StringField('Tags', validators=[Length(max=500)], 
+                      description='Comma-separated tags (e.g., Python, React, AI)')
+    
+    submit = SubmitField('Create Project')
+
+
+class RepositoryForm(FlaskForm):
+    name = StringField('Repository Name', validators=[DataRequired(), Length(min=3, max=200)])
+    description = TextAreaField('Description', validators=[Length(max=1000)])
+    language = SelectField('Primary Language', choices=[
+        ('python', 'Python'),
+        ('javascript', 'JavaScript'),
+        ('typescript', 'TypeScript'),
+        ('java', 'Java'),
+        ('cpp', 'C++'),
+        ('csharp', 'C#'),
+        ('go', 'Go'),
+        ('rust', 'Rust'),
+        ('php', 'PHP'),
+        ('ruby', 'Ruby'),
+        ('swift', 'Swift'),
+        ('kotlin', 'Kotlin'),
+        ('html', 'HTML'),
+        ('css', 'CSS'),
+        ('other', 'Other')
+    ], validators=[DataRequired()])
+    
+    visibility = SelectField('Visibility', choices=[
+        ('private', 'Private'),
+        ('team', 'Team Only'),
+        ('public', 'Public')
+    ], default='private', validators=[DataRequired()])
+    
+    submit = SubmitField('Create Repository')
+
+
+class FileForm(FlaskForm):
+    filename = StringField('File Name', validators=[DataRequired(), Length(min=1, max=500)])
+    filepath = StringField('File Path', validators=[DataRequired(), Length(min=1, max=1000)])
+    content = TextAreaField('File Content', validators=[DataRequired()])
+    language = SelectField('Language', choices=[
+        ('python', 'Python'),
+        ('javascript', 'JavaScript'),
+        ('typescript', 'TypeScript'),
+        ('html', 'HTML'),
+        ('css', 'CSS'),
+        ('json', 'JSON'),
+        ('markdown', 'Markdown'),
+        ('text', 'Plain Text'),
+        ('other', 'Other')
+    ], default='text')
+    
+    submit = SubmitField('Save File')
+
+
+class MilestoneForm(FlaskForm):
+    title = StringField('Milestone Title', validators=[DataRequired(), Length(min=3, max=200)])
+    description = TextAreaField('Description', validators=[Length(max=1000)])
+    requirements = TextAreaField('Requirements', validators=[Length(max=2000)])
+    payment_amount = DecimalField('Payment Amount (USD)', validators=[Optional(), NumberRange(min=0)])
+    due_date = DateTimeLocalField('Due Date', validators=[Optional()])
+    
+    submit = SubmitField('Create Milestone')
+
+
+class CollaborationSessionForm(FlaskForm):
+    title = StringField('Session Title', validators=[DataRequired(), Length(min=3, max=200)])
+    description = TextAreaField('Description', validators=[Length(max=1000)])
+    
+    session_type = SelectField('Session Type', choices=[
+        ('coding', 'Coding Session'),
+        ('review', 'Code Review'),
+        ('planning', 'Planning Meeting'),
+        ('discussion', 'Discussion')
+    ], default='coding', validators=[DataRequired()])
+    
+    max_participants = SelectField('Max Participants', choices=[
+        (2, '2'), (3, '3'), (5, '5'), (10, '10'), (20, '20')
+    ], coerce=int, default=5, validators=[DataRequired()])
+    
+    scheduled_at = DateTimeLocalField('Scheduled Time', validators=[Optional()])
+    
+    submit = SubmitField('Create Session')
+
+
+class JoinTeamForm(FlaskForm):
+    submit = SubmitField('Join Team')
+
+
+class PaymentForm(FlaskForm):
+    recipient_id = SelectField('Recipient', coerce=str, validators=[DataRequired()])
+    milestone_id = SelectField('Milestone', coerce=int, validators=[Optional()])
+    amount = DecimalField('Amount (USD)', validators=[DataRequired(), NumberRange(min=0.01)])
+    payment_type = SelectField('Payment Type', choices=[
+        ('milestone', 'Milestone Payment'),
+        ('bonus', 'Bonus Payment'),
+        ('hourly', 'Hourly Payment'),
+        ('final', 'Final Payment')
+    ], default='milestone', validators=[DataRequired()])
+    description = TextAreaField('Description', validators=[Length(max=500)])
+    
+    submit = SubmitField('Process Payment')

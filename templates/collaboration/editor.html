@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Collaborative Editor - {{ project.name }}{% endblock %}
+
+{% block head %}
+<style>
+    .editor-container {
+        height: 70vh;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+    }
+    .file-tree {
+        height: 70vh;
+        overflow-y: auto;
+        border-right: 1px solid #dee2e6;
+    }
+    .chat-container {
+        height: 300px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+    }
+    .participants-list {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 1rem;
+    }
+    .online-indicator {
+        width: 8px;
+        height: 8px;
+        background-color: #28a745;
+        border-radius: 50%;
+        display: inline-block;
+        margin-right: 5px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h4 class="mb-1">{{ project.name }} - Collaborative Editor</h4>
+            <p class="text-muted mb-0">{{ session.title if session else 'Open Collaboration' }}</p>
+        </div>
+        <div>
+            <button class="btn btn-sm btn-outline-primary me-2" onclick="saveFile()">
+                <i class="fas fa-save"></i> Save
+            </button>
+            <button class="btn btn-sm btn-outline-secondary me-2" onclick="shareSession()">
+                <i class="fas fa-share"></i> Share
+            </button>
+            <a href="{{ url_for('project_detail', project_id=project.id) }}" class="btn btn-sm btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Project
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- File Tree -->
+        <div class="col-md-2">
+            <div class="file-tree bg-light">
+                <div class="p-3 border-bottom">
+                    <h6 class="mb-2">Files</h6>
+                    <button class="btn btn-sm btn-outline-primary w-100" onclick="createNewFile()">
+                        <i class="fas fa-plus"></i> New File
+                    </button>
+                </div>
+                <div class="p-2">
+                    {% for repo in project.repositories %}
+                        <div class="mb-2">
+                            <div class="fw-semibold text-primary">{{ repo.name }}</div>
+                            {% for file in repo.files %}
+                                <div class="ms-3 py-1">
+                                    <a href="#" class="text-decoration-none text-dark file-link" 
+                                       data-file-id="{{ file.id }}" data-filename="{{ file.filename }}">
+                                        <i class="fas fa-file-code me-1"></i>{{ file.filename }}
+                                    </a>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Editor -->
+        <div class="col-md-7">
+            <div class="editor-container">
+                <div class="p-2 bg-light border-bottom">
+                    <span id="current-file">Select a file to edit</span>
+                    <span id="editing-indicator" class="float-end text-muted" style="display: none;">
+                        <i class="fas fa-users"></i> Collaborative editing active
+                    </span>
+                </div>
+                <textarea id="code-editor" class="form-control border-0" style="height: calc(100% - 45px); resize: none; font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;" placeholder="Select a file from the file tree to start editing..."></textarea>
+            </div>
+
+            <!-- Chat -->
+            <div class="mt-3">
+                <h6>Team Chat</h6>
+                <div class="chat-container bg-light">
+                    <div id="chat-messages">
+                        <!-- Chat messages will be loaded here -->
+                    </div>
+                </div>
+                <div class="input-group mt-2">
+                    <input type="text" class="form-control" id="chat-input" placeholder="Type a message...">
+                    <button class="btn btn-primary" onclick="sendMessage()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-3">
+            <!-- Participants -->
+            <div class="participants-list mb-3">
+                <h6>Active Participants</h6>
+                <div id="participants-list">
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="online-indicator"></span>
+                        <img src="{{ current_user.profile_image_url or '/static/images/default-avatar.png' }}" 
+                             alt="You" class="rounded-circle me-2" style="width: 24px; height: 24px;">
+                        <span class="small">You</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Session Info -->
+            {% if session %}
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Session Details</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-1"><strong>Type:</strong> {{ session.session_type.title() }}</p>
+                    <p class="small mb-1"><strong>Host:</strong> {{ session.host.full_name() or session.host.email }}</p>
+                    <p class="small mb-1"><strong>Started:</strong> {{ session.started_at.strftime('%H:%M') if session.started_at else 'Not started' }}</p>
+                    <p class="small mb-0"><strong>Participants:</strong> {{ session.participants|length }}/{{ session.max_participants }}</p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Project Info -->
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Project Info</h6>
+                </div>
+                <div class="card-body">
+                    <p class="small mb-1"><strong>Team:</strong> {{ project.team.name }}</p>
+                    <p class="small mb-1"><strong>Status:</strong> {{ project.status.title() }}</p>
+                    <p class="small mb-0"><strong>Contributors:</strong> {{ project.contributors|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentFileId = null;
+let websocket = null;
+
+// Initialize collaborative editor
+document.addEventListener('DOMContentLoaded', function() {
+    initializeWebSocket();
+    bindFileTreeEvents();
+    bindChatEvents();
+});
+
+function initializeWebSocket() {
+    // WebSocket connection for real-time collaboration
+    // This would connect to a WebSocket server for real-time updates
+    console.log('WebSocket collaboration would be initialized here');
+}
+
+function bindFileTreeEvents() {
+    document.querySelectorAll('.file-link').forEach(link => {
+        link.addEventListener('click', function(e) {
+            e.preventDefault();
+            loadFile(this.dataset.fileId, this.dataset.filename);
+        });
+    });
+}
+
+function bindChatEvents() {
+    document.getElementById('chat-input').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendMessage();
+        }
+    });
+}
+
+function loadFile(fileId, filename) {
+    currentFileId = fileId;
+    document.getElementById('current-file').textContent = filename;
+    
+    // Load file content via AJAX
+    fetch(`/api/files/${fileId}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('code-editor').value = data.content || '';
+            document.getElementById('editing-indicator').style.display = 'inline';
+        })
+        .catch(error => {
+            console.error('Error loading file:', error);
+        });
+}
+
+function saveFile() {
+    if (!currentFileId) {
+        alert('No file selected');
+        return;
+    }
+    
+    const content = document.getElementById('code-editor').value;
+    
+    fetch(`/api/files/${currentFileId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: content })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAlert('File saved successfully', 'success');
+        } else {
+            showAlert('Error saving file', 'error');
+        }
+    });
+}
+
+function createNewFile() {
+    const filename = prompt('Enter filename:');
+    if (filename) {
+        // Create new file logic
+        console.log('Creating file:', filename);
+    }
+}
+
+function shareSession() {
+    const sessionUrl = window.location.href;
+    navigator.clipboard.writeText(sessionUrl).then(() => {
+        showAlert('Session URL copied to clipboard', 'success');
+    });
+}
+
+function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const message = input.value.trim();
+    
+    if (message) {
+        // Send message via WebSocket or AJAX
+        fetch('/api/chat/send', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                message: message,
+                session_id: {{ session.id if session else 'null' }}
+            })
+        });
+        
+        input.value = '';
+    }
+}
+
+function showAlert(message, type) {
+    // Simple alert system
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type === 'success' ? 'success' : 'danger'} alert-dismissible fade show position-fixed`;
+    alertDiv.style.top = '20px';
+    alertDiv.style.right = '20px';
+    alertDiv.style.zIndex = '9999';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    document.body.appendChild(alertDiv);
+    
+    setTimeout(() => {
+        alertDiv.remove();
+    }, 3000);
+}
+</script>
+{% endblock %}

@@ -4,8 +4,13 @@ from flask import render_template, request, redirect, url_for, flash, session, j
 from flask_login import current_user
 from sqlalchemy import or_, and_, desc, asc
 from app import app, db
-from models import User, Product, Category, Review, Message, Purchase, ProductScreenshot
-from forms import ProfileForm, ProductForm, ReviewForm, MessageForm, SearchForm
+from models import (User, Category, Product, ProductScreenshot, Review, Message, Purchase,
+                    Team, TeamMember, Project, ProjectContributor, Milestone, Repository, 
+                    RepositoryFile, Commit, CollaborationSession, SessionParticipant, 
+                    SessionChatMessage, Payment, Notification)
+from forms import (ProfileForm, ProductForm, ReviewForm, MessageForm, SearchForm, 
+                   TeamForm, ProjectForm, RepositoryForm, FileForm, MilestoneForm, 
+                   CollaborationSessionForm, JoinTeamForm, PaymentForm)
 from replit_auth import require_login, require_seller, require_admin, make_replit_blueprint
 from utils import save_uploaded_file, generate_conversation_id, format_price, get_language_choices, paginate_query
 
@@ -562,6 +567,372 @@ def create_default_data():
             db.session.add(category)
         
         db.session.commit()
+
+# Collaborative Coding Platform Routes
+
+@app.route('/teams')
+def teams_list():
+    """List all teams"""
+    search = request.args.get('search', '')
+    team_type = request.args.get('type', '')
+    
+    query = Team.query
+    
+    if search:
+        query = query.filter(Team.name.contains(search) | Team.description.contains(search))
+    
+    if team_type == 'public':
+        query = query.filter(Team.is_public == True)
+    elif team_type == 'private':
+        query = query.filter(Team.is_public == False)
+    
+    teams = query.order_by(Team.created_at.desc()).all()
+    return render_template('teams/list.html', teams=teams)
+
+
+@app.route('/teams/create', methods=['GET', 'POST'])
+@require_login
+def create_team():
+    """Create a new team"""
+    form = TeamForm()
+    
+    if form.validate_on_submit():
+        team = Team(
+            name=form.name.data,
+            description=form.description.data,
+            owner_id=current_user.id,
+            is_public=form.is_public.data,
+            max_members=form.max_members.data
+        )
+        
+        # Handle avatar upload
+        if form.avatar.data:
+            avatar_path = save_uploaded_file(form.avatar.data)
+            team.avatar_url = avatar_path
+        
+        db.session.add(team)
+        db.session.flush()  # Get the team ID
+        
+        # Add owner as team member
+        member = TeamMember(
+            team_id=team.id,
+            user_id=current_user.id,
+            role='owner'
+        )
+        db.session.add(member)
+        db.session.commit()
+        
+        flash('Team created successfully!', 'success')
+        return redirect(url_for('team_detail', team_id=team.id))
+    
+    return render_template('teams/create.html', form=form)
+
+
+@app.route('/teams/<int:team_id>')
+def team_detail(team_id):
+    """View team details"""
+    team = Team.query.get_or_404(team_id)
+    return render_template('teams/detail.html', team=team)
+
+
+@app.route('/teams/<int:team_id>/join', methods=['POST'])
+@require_login
+def join_team(team_id):
+    """Join a team"""
+    team = Team.query.get_or_404(team_id)
+    
+    # Check if already a member
+    existing_member = TeamMember.query.filter_by(team_id=team_id, user_id=current_user.id).first()
+    if existing_member:
+        flash('You are already a member of this team.', 'info')
+        return redirect(url_for('team_detail', team_id=team_id))
+    
+    # Check if team is full
+    if len(team.members) >= team.max_members:
+        flash('Team is full.', 'error')
+        return redirect(url_for('team_detail', team_id=team_id))
+    
+    # Check if team is public
+    if not team.is_public:
+        flash('This team is private.', 'error')
+        return redirect(url_for('team_detail', team_id=team_id))
+    
+    member = TeamMember(
+        team_id=team_id,
+        user_id=current_user.id,
+        role='member'
+    )
+    db.session.add(member)
+    db.session.commit()
+    
+    flash('Successfully joined the team!', 'success')
+    return redirect(url_for('team_detail', team_id=team_id))
+
+
+@app.route('/projects')
+def projects_list():
+    """List all projects"""
+    search = request.args.get('search', '')
+    status = request.args.get('status', '')
+    priority = request.args.get('priority', '')
+    
+    query = Project.query.filter(Project.is_public == True)
+    
+    if search:
+        query = query.filter(Project.name.contains(search) | Project.description.contains(search))
+    
+    if status:
+        query = query.filter(Project.status == status)
+        
+    if priority:
+        query = query.filter(Project.priority == priority)
+    
+    projects = query.order_by(Project.created_at.desc()).all()
+    return render_template('projects/list.html', projects=projects)
+
+
+@app.route('/projects/create', methods=['GET', 'POST'])
+@app.route('/projects/create/<int:team_id>', methods=['GET', 'POST'])
+@require_login
+def create_project(team_id=None):
+    """Create a new project"""
+    form = ProjectForm()
+    
+    # Populate team choices
+    user_teams = Team.query.join(TeamMember).filter(TeamMember.user_id == current_user.id).all()
+    form.team_id.choices = [(team.id, team.name) for team in user_teams]
+    
+    if team_id:
+        form.team_id.data = team_id
+    
+    if form.validate_on_submit():
+        project = Project(
+            name=form.name.data,
+            description=form.description.data,
+            requirements=form.requirements.data,
+            team_id=form.team_id.data,
+            owner_id=current_user.id,
+            priority=form.priority.data,
+            budget=form.budget.data,
+            payment_model=form.payment_model.data,
+            start_date=form.start_date.data,
+            due_date=form.due_date.data,
+            is_public=form.is_public.data,
+            tags=form.tags.data
+        )
+        
+        db.session.add(project)
+        db.session.flush()
+        
+        # Add creator as project contributor
+        contributor = ProjectContributor(
+            project_id=project.id,
+            user_id=current_user.id,
+            role='lead'
+        )
+        db.session.add(contributor)
+        db.session.commit()
+        
+        flash('Project created successfully!', 'success')
+        return redirect(url_for('project_detail', project_id=project.id))
+    
+    return render_template('projects/create.html', form=form, team_id=team_id)
+
+
+@app.route('/projects/<int:project_id>')
+def project_detail(project_id):
+    """View project details"""
+    project = Project.query.get_or_404(project_id)
+    return render_template('projects/detail.html', project=project)
+
+
+@app.route('/projects/<int:project_id>/collaborate')
+@require_login
+def collaborative_editor(project_id):
+    """Open collaborative editor for project"""
+    project = Project.query.get_or_404(project_id)
+    
+    # Check if user has access to this project
+    is_contributor = ProjectContributor.query.filter_by(
+        project_id=project_id, 
+        user_id=current_user.id
+    ).first()
+    
+    is_team_member = TeamMember.query.filter_by(
+        team_id=project.team_id,
+        user_id=current_user.id
+    ).first()
+    
+    if not (is_contributor or is_team_member or project.is_public):
+        flash('You do not have access to this project.', 'error')
+        return redirect(url_for('project_detail', project_id=project_id))
+    
+    # Get or create active collaboration session
+    active_session = CollaborationSession.query.filter_by(
+        project_id=project_id,
+        status='active'
+    ).first()
+    
+    return render_template('collaboration/editor.html', project=project, session=active_session)
+
+
+@app.route('/projects/<int:project_id>/repositories/create', methods=['GET', 'POST'])
+@require_login
+def create_repository(project_id):
+    """Create a new repository for project"""
+    project = Project.query.get_or_404(project_id)
+    form = RepositoryForm()
+    
+    if form.validate_on_submit():
+        repository = Repository(
+            project_id=project_id,
+            name=form.name.data,
+            description=form.description.data,
+            visibility=form.visibility.data,
+            language=form.language.data
+        )
+        
+        db.session.add(repository)
+        db.session.commit()
+        
+        flash('Repository created successfully!', 'success')
+        return redirect(url_for('project_detail', project_id=project_id))
+    
+    return render_template('repository/create.html', form=form, project=project)
+
+
+# API Routes for collaborative features
+@app.route('/api/files/<int:file_id>')
+@require_login
+def get_file_content(file_id):
+    """Get file content for editor"""
+    file = RepositoryFile.query.get_or_404(file_id)
+    return jsonify({
+        'content': file.content,
+        'language': file.language,
+        'filename': file.filename
+    })
+
+
+@app.route('/api/files/<int:file_id>', methods=['PUT'])
+@require_login
+def update_file_content(file_id):
+    """Update file content"""
+    file = RepositoryFile.query.get_or_404(file_id)
+    data = request.get_json()
+    
+    file.content = data.get('content', '')
+    file.updated_at = datetime.now()
+    db.session.commit()
+    
+    return jsonify({'success': True})
+
+
+@app.route('/api/chat/send', methods=['POST'])
+@require_login
+def send_chat_message():
+    """Send chat message in collaboration session"""
+    data = request.get_json()
+    session_id = data.get('session_id')
+    message = data.get('message')
+    
+    if session_id and message:
+        chat_message = SessionChatMessage(
+            session_id=session_id,
+            user_id=current_user.id,
+            message=message
+        )
+        db.session.add(chat_message)
+        db.session.commit()
+        
+        return jsonify({'success': True})
+    
+    return jsonify({'success': False})
+
+
+# Additional API endpoints for project management
+@app.route('/api/projects/<int:project_id>/join', methods=['POST'])
+@require_login
+def join_project_api(project_id):
+    """Join a project as contributor"""
+    project = Project.query.get_or_404(project_id)
+    
+    # Check if already a contributor
+    existing = ProjectContributor.query.filter_by(
+        project_id=project_id, 
+        user_id=current_user.id
+    ).first()
+    
+    if existing:
+        return jsonify({'success': False, 'message': 'Already a contributor'})
+    
+    if not project.is_public:
+        return jsonify({'success': False, 'message': 'Project is private'})
+    
+    contributor = ProjectContributor(
+        project_id=project_id,
+        user_id=current_user.id,
+        role='contributor'
+    )
+    db.session.add(contributor)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Successfully joined project'})
+
+
+@app.route('/api/projects/<int:project_id>/milestones', methods=['POST'])
+@require_login
+def create_milestone_api(project_id):
+    """Create a new milestone"""
+    project = Project.query.get_or_404(project_id)
+    data = request.get_json()
+    
+    # Check if user has access
+    is_contributor = ProjectContributor.query.filter_by(
+        project_id=project_id, 
+        user_id=current_user.id
+    ).first()
+    
+    if not is_contributor:
+        return jsonify({'success': False, 'message': 'No access'})
+    
+    milestone = Milestone(
+        project_id=project_id,
+        title=data.get('title', ''),
+        description=data.get('description', ''),
+        payment_amount=data.get('payment_amount')
+    )
+    
+    db.session.add(milestone)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'message': 'Milestone created'})
+
+
+# Update home page to show collaborative features
+@app.route('/dashboard')
+@require_login
+def collaborative_dashboard():
+    """Collaborative coding dashboard"""
+    # Get user's teams
+    user_teams = Team.query.join(TeamMember).filter(TeamMember.user_id == current_user.id).all()
+    
+    # Get user's projects
+    user_projects = Project.query.join(ProjectContributor).filter(
+        ProjectContributor.user_id == current_user.id
+    ).order_by(Project.updated_at.desc()).limit(5).all()
+    
+    # Get recent activity (notifications)
+    notifications = Notification.query.filter_by(
+        user_id=current_user.id,
+        is_read=False
+    ).order_by(Notification.created_at.desc()).limit(10).all()
+    
+    return render_template('dashboard/collaborative.html', 
+                         teams=user_teams, 
+                         projects=user_projects,
+                         notifications=notifications)
+
 
 # Initialize default data when the app starts
 with app.app_context():

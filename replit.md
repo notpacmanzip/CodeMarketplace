@@ -2,7 +2,7 @@
 
 ## Overview
 
-DevMarket is a comprehensive software marketplace platform built with Flask, designed to facilitate the buying and selling of software products, applications, and code libraries between developers. The platform features user authentication via Replit Auth, product management, payment processing with Stripe, messaging systems, and administrative controls.
+DevMarket is a comprehensive collaborative coding platform built with Flask, designed to facilitate team-based software development, project management, and developer collaboration. The platform features user authentication via Replit Auth, team management, project collaboration, real-time code editing, payment processing with Stripe, messaging systems, and administrative controls. Originally built as a marketplace, it has evolved into a full collaborative development environment supporting teams, projects, repositories, and real-time coding sessions.
 
 ## System Architecture
 
@@ -33,36 +33,55 @@ DevMarket is a comprehensive software marketplace platform built with Flask, des
 
 ### Authentication System
 - Replit Auth integration for seamless user onboarding
-- Role-based access control (buyer, seller, admin)
+- Role-based access control (buyer, seller, admin, team roles)
 - Session management with Flask-Login
 - User profile management with editable fields
 
-### Product Management
-- Complete product lifecycle (create, read, update, delete)
-- Category-based organization
-- Image upload with automatic optimization
-- Programming language and framework tagging
-- Demo URLs and documentation links
-- Version control and licensing information
+### Team Collaboration System
+- Team creation and management with role-based permissions
+- Public and private team visibility options
+- Team member management with different access levels
+- Team-based project organization
+
+### Project Management
+- Collaborative project creation and management
+- Project requirements and goal definition
+- Milestone tracking with payment integration
+- Priority-based project organization
+- Public project discovery and contribution
+
+### Real-time Collaborative Coding
+- Multi-user code editing environment
+- File and repository management within projects
+- Version control integration with commit tracking
+- Live chat during coding sessions
+- Session-based collaboration with participant management
+
+### Repository Management
+- Project-based repository organization
+- File management with syntax highlighting
+- Language-specific file handling
+- Public, private, and team-only repository visibility
 
 ### Payment System
 - Stripe integration for secure payment processing
-- Checkout flow with order summaries
-- Transaction tracking and receipt generation
-- Success/cancel page handling
+- Milestone-based payment distribution
+- Contributor compensation tracking
+- Multiple payment models (hourly, fixed, equity)
+- Transaction tracking and management
 
 ### Messaging System
 - Private messaging between users
-- Conversation threading
-- Product-specific inquiries
-- Unread message tracking
+- Team communication channels
+- Project-specific discussions
+- Real-time chat in collaboration sessions
+- Notification system for project updates
 
 ### Search and Discovery
-- Advanced product filtering
-- Category-based browsing
-- Programming language filtering
-- Price range selection
-- Search functionality
+- Team and project discovery
+- Advanced filtering by status, priority, language
+- Public project browsing
+- Team member search and recruitment
 
 ## Data Flow
 
@@ -139,4 +158,12 @@ Preferred communication style: Simple, everyday language.
 ## Changelog
 
 Changelog:
-- June 25, 2025. Initial setup
+- June 25, 2025: Initial marketplace setup with basic product management
+- June 25, 2025: Major evolution into collaborative coding platform
+  - Added comprehensive team management system
+  - Implemented project-based collaboration features
+  - Created real-time collaborative code editor
+  - Added repository and file management
+  - Integrated milestone tracking and payment distribution
+  - Built notification system for project updates
+  - Enhanced dashboard for collaborative workflow
