@@ -78,7 +78,12 @@ Stackly is a comprehensive collaborative coding platform built with Flask, desig
 - Project-based repository organization
 - File management with syntax highlighting
 - Language-specific file handling
-- Public, private, and team-only repository visibility
+- Three-tier visibility system:
+  - Private: Only repository owner can access
+  - Team: All team members can access and edit
+  - Public: Everyone can view, only owner can edit
+- Dedicated team repository views accessible from navigation
+- Team repositories display in team detail pages
 
 ### Payment System
 - Stripe integration for secure payment processing
@@ -225,3 +230,9 @@ Changelog:
   - Implemented comprehensive access control methods in repository models
   - Updated forms and templates to support new visibility options
   - Added visual indicators and help text for repository access levels
+- June 25, 2025: Enhanced team repository system with dedicated team views
+  - Created dedicated team repositories page accessible from navigation dropdown
+  - Added team repository section to team detail pages showing recent repos
+  - Updated navigation with repositories dropdown showing team-specific access
+  - Team repositories now visible to all team members with proper access control
+  - Enhanced repository visibility badges with icons for better UX

@@ -55,6 +55,72 @@
     </div>
 
     <div class="row">
+        <!-- Team Repositories Section -->
+        <div class="col-md-12 mb-4">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0"><i class="fas fa-code-branch"></i> Team Repositories</h5>
+                    <div>
+                        <a href="{{ url_for('team_repositories', team_id=team.id) }}" class="btn btn-sm btn-outline-primary me-2">View All</a>
+                        {% if current_user.is_authenticated and team.members|selectattr('user_id', 'equalto', current_user.id)|first %}
+                            <a href="{{ url_for('create_repository') }}" class="btn btn-sm btn-primary">New Repository</a>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% set team_repos = [] %}
+                    {% for project in team.projects %}
+                        {% for repo in project.code_repositories %}
+                            {% if repo.visibility == 'team' %}
+                                {% set _ = team_repos.append(repo) %}
+                            {% endif %}
+                        {% endfor %}
+                    {% endfor %}
+                    
+                    {% if team_repos %}
+                        <div class="row">
+                            {% for repo in team_repos[:4] %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="border rounded p-3">
+                                        <div class="d-flex justify-content-between align-items-start mb-2">
+                                            <h6 class="mb-0">
+                                                <a href="{{ url_for('repository_detail', repo_id=repo.id) }}" class="text-decoration-none">{{ repo.name }}</a>
+                                            </h6>
+                                            <span class="badge bg-primary">
+                                                <i class="fas fa-users"></i> Team
+                                            </span>
+                                        </div>
+                                        {% if repo.description %}
+                                            <p class="text-muted small mb-2">{{ repo.description[:80] }}{% if repo.description|length > 80 %}...{% endif %}</p>
+                                        {% endif %}
+                                        <small class="text-muted">
+                                            <i class="fas fa-file-code"></i> {{ repo.files|length }} files
+                                            <span class="ms-2">{{ repo.updated_at.strftime('%m/%d') }}</span>
+                                        </small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        {% if team_repos|length > 4 %}
+                            <div class="text-center mt-3">
+                                <a href="{{ url_for('team_repositories', team_id=team.id) }}" class="btn btn-sm btn-outline-primary">
+                                    View {{ team_repos|length - 4 }} more repositories
+                                </a>
+                            </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-code-branch fa-2x text-muted mb-2"></i>
+                            <p class="text-muted mb-3">No team repositories yet.</p>
+                            {% if current_user.is_authenticated and team.members|selectattr('user_id', 'equalto', current_user.id)|first %}
+                                <a href="{{ url_for('create_repository') }}" class="btn btn-sm btn-primary">Create First Repository</a>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
         <!-- Projects Section -->
         <div class="col-md-8 mb-4">
             <div class="card">

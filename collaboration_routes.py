@@ -34,6 +34,32 @@ def repositories_list():
     
     return render_template('repository/list.html', repositories=all_repos)
 
+
+@app.route('/teams/<int:team_id>/repositories')
+@require_login
+def team_repositories(team_id):
+    """List all repositories for a specific team"""
+    team = Team.query.get_or_404(team_id)
+    
+    # Check if user is team member
+    team_member = TeamMember.query.filter_by(
+        team_id=team_id, user_id=current_user.id, is_active=True
+    ).first()
+    
+    if not team_member and team.owner_id != current_user.id:
+        abort(403)
+    
+    # Get all team repositories from team projects
+    team_repos = []
+    for project in team.projects:
+        repos = CodeRepository.query.filter_by(
+            project_id=project.id, visibility='team'
+        ).all()
+        team_repos.extend(repos)
+    
+    return render_template('collaboration/team_repositories.html', 
+                         team=team, repositories=team_repos)
+
 @app.route('/projects/<int:project_id>/repositories')
 @require_login
 def project_repositories(project_id):
