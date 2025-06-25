@@ -803,7 +803,9 @@ def collaborative_editor(project_id):
 @require_login
 def get_file_content(file_id):
     """Get file content for editor"""
-    file = RepositoryFile.query.get_or_404(file_id)
+    # Import here to avoid circular imports
+    from collaboration_models import CodeFile
+    file = CodeFile.query.get_or_404(file_id)
     return jsonify({
         'content': file.content,
         'language': file.language,
@@ -815,10 +817,14 @@ def get_file_content(file_id):
 @require_login
 def update_file_content(file_id):
     """Update file content"""
-    file = RepositoryFile.query.get_or_404(file_id)
+    from collaboration_models import CodeFile
+    file = CodeFile.query.get_or_404(file_id)
     data = request.get_json()
     
     file.content = data.get('content', '')
+    file.file_size = len(data.get('content', '').encode('utf-8'))
+    file.last_modified_by = current_user.id
+    file.version += 1
     file.updated_at = datetime.now()
     db.session.commit()
     

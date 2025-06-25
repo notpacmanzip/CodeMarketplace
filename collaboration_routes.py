@@ -15,6 +15,25 @@ from collaboration_forms import (CodeRepositoryForm, CodeFileForm, CodeCommitFor
 from replit_auth import require_login
 
 
+@app.route('/repositories')
+@require_login 
+def repositories_list():
+    """List all repositories for current user"""
+    # Get user's repositories (owned and contributed to)
+    owned_repos = CodeRepository.query.filter_by(owner_id=current_user.id).all()
+    
+    # Get repositories from projects user contributes to
+    contributed_projects = ProjectContributor.query.filter_by(user_id=current_user.id).all()
+    contributed_repos = []
+    for contrib in contributed_projects:
+        repos = CodeRepository.query.filter_by(project_id=contrib.project_id).all()
+        contributed_repos.extend(repos)
+    
+    # Combine and deduplicate
+    all_repos = list({repo.id: repo for repo in (owned_repos + contributed_repos)}.values())
+    
+    return render_template('repository/list.html', repositories=all_repos)
+
 @app.route('/projects/<int:project_id>/repositories')
 @require_login
 def project_repositories(project_id):
@@ -39,19 +58,51 @@ def project_repositories(project_id):
                          repositories=repositories)
 
 
+@app.route('/repositories/create', methods=['GET', 'POST'])
 @app.route('/projects/<int:project_id>/repositories/create', methods=['GET', 'POST'])
 @require_login
-def create_repository(project_id):
+def create_repository(project_id=None):
     """Create a new code repository"""
-    project = Project.query.get_or_404(project_id)
-    
-    # Check if user has write access
-    is_contributor = ProjectContributor.query.filter_by(
-        project_id=project_id, user_id=current_user.id
-    ).first()
-    
-    if not is_contributor and project.owner_id != current_user.id:
-        abort(403)
+    project = None
+    if project_id:
+        project = Project.query.get_or_404(project_id)
+        
+        # Check if user has write access
+        is_contributor = ProjectContributor.query.filter_by(
+            project_id=project_id, user_id=current_user.id
+        ).first()
+        
+        if not is_contributor and project.owner_id != current_user.id:
+            abort(403)
+    else:
+        # Create a default project if none exists
+        default_project = Project.query.filter_by(owner_id=current_user.id).first()
+        if not default_project:
+            # Create a personal project
+            from models import Team
+            personal_team = Team.query.filter_by(owner_id=current_user.id).first()
+            if not personal_team:
+                personal_team = Team(
+                    name=f"{current_user.full_name()}'s Team",
+                    description="Personal workspace",
+                    owner_id=current_user.id,
+                    is_public=False
+                )
+                db.session.add(personal_team)
+                db.session.flush()
+            
+            default_project = Project(
+                name="Personal Project",
+                description="Your personal coding workspace",
+                team_id=personal_team.id,
+                owner_id=current_user.id,
+                is_public=False
+            )
+            db.session.add(default_project)
+            db.session.flush()
+        
+        project_id = default_project.id
+        project = default_project
     
     form = CodeRepositoryForm()
     
@@ -71,7 +122,7 @@ def create_repository(project_id):
         flash('Repository created successfully!', 'success')
         return redirect(url_for('repository_detail', repo_id=repository.id))
     
-    return render_template('collaboration/create_repository.html', 
+    return render_template('repository/create.html', 
                          form=form, project=project)
 
 
@@ -225,7 +276,7 @@ def edit_file(file_id):
         return redirect(url_for('file_detail', file_id=file.id))
     
     return render_template('repository/file_editor.html', 
-                         form=form, file=file)
+                         form=form, file=file, repository=file.repository)
 
 
 @app.route('/projects/<int:project_id>/live-session/create', methods=['GET', 'POST'])

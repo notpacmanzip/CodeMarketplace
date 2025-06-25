@@ -1,0 +1,325 @@
+{% extends "base.html" %}
+
+{% block title %}{{ repository.name }} - Code Editor{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/editor/editor.main.min.css">
+<style>
+    .file-tree {
+        height: calc(100vh - 200px);
+        overflow-y: auto;
+        border-right: 1px solid #dee2e6;
+    }
+    .editor-container {
+        height: calc(100vh - 200px);
+    }
+    .file-item {
+        cursor: pointer;
+        padding: 8px 16px;
+        border-radius: 4px;
+        margin: 2px 0;
+    }
+    .file-item:hover {
+        background-color: rgba(0,0,0,0.1);
+    }
+    .file-item.active {
+        background-color: var(--bs-primary);
+        color: white;
+    }
+    .toolbar {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #dee2e6;
+        padding: 10px;
+    }
+    #editor {
+        height: 100%;
+        border: 1px solid #dee2e6;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <!-- Toolbar -->
+    <div class="toolbar d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <a href="{{ url_for('repository_detail', repo_id=repository.id) }}" class="btn btn-sm btn-outline-secondary me-3">
+                <i class="fas fa-arrow-left"></i> Back to Repository
+            </a>
+            <h5 class="mb-0">
+                <i class="fas fa-code"></i> {{ repository.name }}
+            </h5>
+            <span id="current-file" class="ms-3 text-muted"></span>
+        </div>
+        <div class="d-flex gap-2">
+            {% if can_edit %}
+            <button id="save-file" class="btn btn-sm btn-success" disabled>
+                <i class="fas fa-save"></i> Save
+            </button>
+            <button id="new-file" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus"></i> New File
+            </button>
+            {% endif %}
+            <button id="run-code" class="btn btn-sm btn-warning">
+                <i class="fas fa-play"></i> Run
+            </button>
+        </div>
+    </div>
+
+    <div class="row g-0">
+        <!-- File Tree -->
+        <div class="col-md-3 file-tree">
+            <div class="p-3">
+                <h6 class="mb-3">
+                    <i class="fas fa-folder-open"></i> Files
+                    <span class="badge bg-secondary ms-2">{{ files|length }}</span>
+                </h6>
+                
+                {% if files %}
+                    {% for file in files %}
+                    <div class="file-item" data-file-id="{{ file.id }}" data-file-path="{{ file.file_path }}">
+                        <i class="fas fa-file-code"></i>
+                        <span class="ms-2">{{ file.filename }}</span>
+                        <div class="text-muted small">{{ file.file_path }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="text-muted">
+                        <i class="fas fa-info-circle"></i> No files yet
+                        {% if can_edit %}
+                        <br><small>Click "New File" to create your first file</small>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Editor -->
+        <div class="col-md-9">
+            <div class="editor-container">
+                <div id="editor"></div>
+                <div id="editor-placeholder" class="d-flex align-items-center justify-content-center h-100 text-muted">
+                    <div class="text-center">
+                        <i class="fas fa-code fa-4x mb-3"></i>
+                        <h4>Select a file to start editing</h4>
+                        <p>Choose a file from the tree on the left to view and edit its contents.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- New File Modal -->
+<div class="modal fade" id="newFileModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Create New File</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="new-file-form">
+                    <div class="mb-3">
+                        <label for="file-name" class="form-label">File Name</label>
+                        <input type="text" class="form-control" id="file-name" placeholder="e.g., main.py" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="file-path" class="form-label">File Path</label>
+                        <input type="text" class="form-control" id="file-path" placeholder="e.g., src/main.py" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="file-language" class="form-label">Language</label>
+                        <select class="form-select" id="file-language">
+                            <option value="">Auto-detect</option>
+                            <option value="python">Python</option>
+                            <option value="javascript">JavaScript</option>
+                            <option value="typescript">TypeScript</option>
+                            <option value="html">HTML</option>
+                            <option value="css">CSS</option>
+                            <option value="json">JSON</option>
+                            <option value="markdown">Markdown</option>
+                            <option value="text">Plain Text</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="create-file-btn">Create File</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs/loader.min.js"></script>
+<script>
+let editor = null;
+let currentFileId = null;
+let currentFileContent = '';
+let hasUnsavedChanges = false;
+
+require.config({ paths: { vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.34.1/min/vs' }});
+
+require(['vs/editor/editor.main'], function () {
+    // Initialize Monaco Editor
+    editor = monaco.editor.create(document.getElementById('editor'), {
+        value: '',
+        language: 'plaintext',
+        theme: 'vs-dark',
+        automaticLayout: true,
+        minimap: { enabled: false },
+        fontSize: 14,
+        wordWrap: 'on'
+    });
+
+    // Track changes
+    editor.onDidChangeModelContent(() => {
+        if (currentFileId) {
+            hasUnsavedChanges = editor.getValue() !== currentFileContent;
+            document.getElementById('save-file').disabled = !hasUnsavedChanges;
+        }
+    });
+
+    // Hide placeholder initially
+    document.getElementById('editor-placeholder').style.display = 'none';
+});
+
+// File tree click handlers
+document.querySelectorAll('.file-item').forEach(item => {
+    item.addEventListener('click', () => loadFile(item.dataset.fileId, item.dataset.filePath));
+});
+
+// Load file content
+async function loadFile(fileId, filePath) {
+    if (hasUnsavedChanges) {
+        if (!confirm('You have unsaved changes. Do you want to continue?')) {
+            return;
+        }
+    }
+
+    try {
+        const response = await fetch(`/api/files/${fileId}`);
+        const data = await response.json();
+        
+        if (editor) {
+            editor.setValue(data.content || '');
+            monaco.editor.setModelLanguage(editor.getModel(), data.language || 'plaintext');
+        }
+        
+        currentFileId = fileId;
+        currentFileContent = data.content || '';
+        hasUnsavedChanges = false;
+        
+        // Update UI
+        document.getElementById('current-file').textContent = filePath;
+        document.getElementById('save-file').disabled = true;
+        
+        // Update active file in tree
+        document.querySelectorAll('.file-item').forEach(item => {
+            item.classList.remove('active');
+        });
+        document.querySelector(`[data-file-id="${fileId}"]`).classList.add('active');
+        
+        // Show editor, hide placeholder
+        document.getElementById('editor').style.display = 'block';
+        document.getElementById('editor-placeholder').style.display = 'none';
+    } catch (error) {
+        console.error('Error loading file:', error);
+        alert('Failed to load file');
+    }
+}
+
+// Save file
+document.getElementById('save-file').addEventListener('click', async () => {
+    if (!currentFileId || !hasUnsavedChanges) return;
+    
+    try {
+        const response = await fetch(`/api/files/${currentFileId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ content: editor.getValue() })
+        });
+        
+        if (response.ok) {
+            currentFileContent = editor.getValue();
+            hasUnsavedChanges = false;
+            document.getElementById('save-file').disabled = true;
+            
+            // Show success message
+            const toast = document.createElement('div');
+            toast.className = 'toast align-items-center text-white bg-success border-0 position-fixed top-0 end-0 m-3';
+            toast.innerHTML = `
+                <div class="d-flex">
+                    <div class="toast-body">File saved successfully!</div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>`;
+            document.body.appendChild(toast);
+            new bootstrap.Toast(toast).show();
+            setTimeout(() => toast.remove(), 3000);
+        } else {
+            alert('Failed to save file');
+        }
+    } catch (error) {
+        console.error('Error saving file:', error);
+        alert('Failed to save file');
+    }
+});
+
+// New file modal
+document.getElementById('new-file').addEventListener('click', () => {
+    new bootstrap.Modal(document.getElementById('newFileModal')).show();
+});
+
+// Create new file
+document.getElementById('create-file-btn').addEventListener('click', async () => {
+    const filename = document.getElementById('file-name').value;
+    const filepath = document.getElementById('file-path').value;
+    const language = document.getElementById('file-language').value;
+    
+    if (!filename || !filepath) {
+        alert('Please fill in all required fields');
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/repositories/{{ repository.id }}/files/create`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+                'filename': filename,
+                'file_path': filepath,
+                'content': '',
+                'language': language,
+                'csrf_token': '{{ csrf_token() }}'
+            })
+        });
+        
+        if (response.ok) {
+            location.reload(); // Refresh to show new file
+        } else {
+            alert('Failed to create file');
+        }
+    } catch (error) {
+        console.error('Error creating file:', error);
+        alert('Failed to create file');
+    }
+});
+
+// Run code (placeholder)
+document.getElementById('run-code').addEventListener('click', () => {
+    alert('Code execution feature coming soon!');
+});
+
+// Auto-fill file path based on filename
+document.getElementById('file-name').addEventListener('input', (e) => {
+    const filename = e.target.value;
+    const pathField = document.getElementById('file-path');
+    if (!pathField.value && filename) {
+        pathField.value = filename;
+    }
+});
+</script>
+{% endblock %}

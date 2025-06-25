@@ -10,7 +10,7 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a href="{{ url_for('project_detail', project_id=file.repository.project.id) }}">{{ file.repository.project.name }}</a>
+                        <a href="{{ url_for('repositories_list') }}">Repositories</a>
                     </li>
                     <li class="breadcrumb-item">
                         <a href="{{ url_for('repository_detail', repo_id=file.repository.id) }}">{{ file.repository.name }}</a>
