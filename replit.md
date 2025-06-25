@@ -1,8 +1,8 @@
-# DevMarket - Software Marketplace Platform
+# Stackly - Collaborative Coding Platform
 
 ## Overview
 
-DevMarket is a comprehensive collaborative coding platform built with Flask, designed to facilitate team-based software development, project management, and developer collaboration. The platform features user authentication via Replit Auth, team management, project collaboration, real-time code editing, payment processing with Stripe, messaging systems, and administrative controls. Originally built as a marketplace, it has evolved into a full collaborative development environment supporting teams, projects, repositories, and real-time coding sessions.
+Stackly is a comprehensive collaborative coding platform built with Flask, designed to facilitate team-based software development, project management, and developer collaboration. The platform features user authentication via Replit Auth, team management, project collaboration, real-time code editing, payment processing with Stripe, messaging systems, and administrative controls. Originally built as a marketplace, it has evolved into a full collaborative development environment supporting teams, projects, repositories, and real-time coding sessions.
 
 ## System Architecture
 
@@ -177,6 +177,11 @@ Preferred communication style: Simple, everyday language.
 Changelog:
 - June 25, 2025: Initial marketplace setup with basic product management
 - June 25, 2025: Major evolution into collaborative coding platform
+- June 25, 2025: Complete rebranding from DevMarket to Stackly
+  - Updated all template titles and brand references
+  - Changed navigation branding with new icon (layer-group)
+  - Updated README and documentation
+  - Maintained all functionality while refreshing brand identity
   - Added comprehensive team management system
   - Implemented project-based collaboration features
   - Created real-time collaborative code editor
