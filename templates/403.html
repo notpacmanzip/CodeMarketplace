@@ -45,7 +45,7 @@
             {% if current_user.is_authenticated %}
                 <div class="mt-4">
                     <small class="text-muted">
-                        Logged in as: {{ current_user.full_name }} ({{ current_user.user_type.title() }})
+                        Logged in as: {{ current_user.full_name() }} ({{ current_user.user_type.title() }})
                     </small>
                 </div>
             {% endif %}

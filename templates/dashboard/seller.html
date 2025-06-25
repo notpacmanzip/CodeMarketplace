@@ -198,7 +198,7 @@
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div class="d-flex align-items-center">
                                         {% if review.reviewer.profile_image_url %}
-                                            <img src="{{ review.reviewer.profile_image_url }}" alt="{{ review.reviewer.full_name }}" 
+                                            <img src="{{ review.reviewer.profile_image_url }}" alt="{{ review.reviewer.full_name() }}" 
                                                  class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                                         {% else %}
                                             <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
@@ -207,7 +207,7 @@
                                             </div>
                                         {% endif %}
                                         <div>
-                                            <strong>{{ review.reviewer.full_name }}</strong>
+                                            <strong>{{ review.reviewer.full_name() }}</strong>
                                             <small class="text-muted">reviewed</small>
                                             <a href="{{ url_for('product_detail', product_id=review.product.id) }}" class="text-decoration-none">
                                                 {{ review.product.title }}

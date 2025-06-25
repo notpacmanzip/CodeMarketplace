@@ -14,7 +14,7 @@
                             <h5 class="mb-0">{{ session.session_name }}</h5>
                             <small class="text-muted">
                                 Project: {{ session.project.name }} | 
-                                Host: {{ session.host.full_name }} |
+                                Host: {{ session.host.full_name() }} |
                                 <span id="participant-count">{{ session.participants|length }}</span> participants
                             </small>
                         </div>
@@ -116,7 +116,7 @@
                                 {% endif %}
                             </div>
                             <div class="flex-grow-1">
-                                <small>{{ participant.user.full_name }}</small>
+                                <small>{{ participant.user.full_name() }}</small>
                                 <div class="text-muted" style="font-size: 0.7rem;">{{ participant.role }}</div>
                             </div>
                             <div class="online-indicator bg-success rounded-circle" style="width: 8px; height: 8px;"></div>
@@ -342,7 +342,7 @@ function sendChatMessage() {
         messageDiv.className = 'mb-2';
         messageDiv.innerHTML = `
             <div class="d-flex justify-content-between">
-                <strong class="small">{{ current_user.full_name }}</strong>
+                <strong class="small">{{ current_user.full_name() }}</strong>
                 <small class="text-muted">${new Date().toLocaleTimeString()}</small>
             </div>
             <div class="small">${message}</div>

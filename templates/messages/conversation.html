@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Conversation with {{ other_user.full_name if other_user else 'User' }} - Stackly{% endblock %}
+{% block title %}Conversation with {{ other_user.full_name() if other_user else 'User' }} - Stackly{% endblock %}
 
 {% block content %}
 <div class="container py-4">
@@ -12,7 +12,7 @@
                     <li class="breadcrumb-item"><a href="{{ url_for('inbox') }}">Messages</a></li>
                     <li class="breadcrumb-item active">
                         {% if other_user %}
-                            Conversation with {{ other_user.full_name }}
+                            Conversation with {{ other_user.full_name() }}
                         {% else %}
                             New Conversation
                         {% endif %}
@@ -30,7 +30,7 @@
                     <div class="d-flex align-items-center">
                         {% if other_user %}
                             {% if other_user.profile_image_url %}
-                                <img src="{{ other_user.profile_image_url }}" alt="{{ other_user.full_name }}" 
+                                <img src="{{ other_user.profile_image_url }}" alt="{{ other_user.full_name() }}" 
                                      class="rounded-circle me-3" style="width: 40px; height: 40px; object-fit: cover;">
                             {% else %}
                                 <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" 
@@ -39,7 +39,7 @@
                                 </div>
                             {% endif %}
                             <div>
-                                <h5 class="mb-0">{{ other_user.full_name }}</h5>
+                                <h5 class="mb-0">{{ other_user.full_name() }}</h5>
                                 {% if other_user.company %}
                                     <small class="text-muted">{{ other_user.company }}</small>
                                 {% endif %}
@@ -128,7 +128,7 @@
                     <div class="card-body">
                         <div class="text-center mb-3">
                             {% if other_user.profile_image_url %}
-                                <img src="{{ other_user.profile_image_url }}" alt="{{ other_user.full_name }}" 
+                                <img src="{{ other_user.profile_image_url }}" alt="{{ other_user.full_name() }}" 
                                      class="rounded-circle mb-2" style="width: 80px; height: 80px; object-fit: cover;">
                             {% else %}
                                 <div class="bg-secondary rounded-circle mx-auto mb-2 d-flex align-items-center justify-content-center" 
@@ -136,7 +136,7 @@
                                     <i class="fas fa-user fa-2x text-muted"></i>
                                 </div>
                             {% endif %}
-                            <h5 class="mb-0">{{ other_user.full_name }}</h5>
+                            <h5 class="mb-0">{{ other_user.full_name() }}</h5>
                             {% if other_user.company %}
                                 <small class="text-muted">{{ other_user.company }}</small>
                             {% endif %}

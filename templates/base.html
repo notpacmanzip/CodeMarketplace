@@ -104,7 +104,7 @@
                                 {% else %}
                                     <i class="fas fa-user-circle me-1"></i>
                                 {% endif %}
-                                {{ current_user.full_name }}
+                                {{ current_user.full_name() }}
                             </a>
                             <ul class="dropdown-menu">
                                 <li><a class="dropdown-item" href="{{ url_for('collaborative_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>

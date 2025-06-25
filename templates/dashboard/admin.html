@@ -118,7 +118,7 @@
                                             <td>
                                                 <div class="d-flex align-items-center">
                                                     {% if product.seller.profile_image_url %}
-                                                        <img src="{{ product.seller.profile_image_url }}" alt="{{ product.seller.full_name }}" 
+                                                        <img src="{{ product.seller.profile_image_url }}" alt="{{ product.seller.full_name() }}" 
                                                              class="rounded-circle me-2" style="width: 30px; height: 30px; object-fit: cover;">
                                                     {% else %}
                                                         <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
@@ -127,7 +127,7 @@
                                                         </div>
                                                     {% endif %}
                                                     <div>
-                                                        <div class="fw-bold">{{ product.seller.full_name }}</div>
+                                                        <div class="fw-bold">{{ product.seller.full_name() }}</div>
                                                         {% if product.seller.company %}
                                                             <small class="text-muted">{{ product.seller.company }}</small>
                                                         {% endif %}

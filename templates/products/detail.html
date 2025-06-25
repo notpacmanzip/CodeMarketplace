@@ -23,7 +23,7 @@
             <div class="d-flex align-items-center gap-3 mb-3">
                 <div class="d-flex align-items-center">
                     {% if product.seller.profile_image_url %}
-                        <img src="{{ product.seller.profile_image_url }}" alt="{{ product.seller.full_name }}" 
+                        <img src="{{ product.seller.profile_image_url }}" alt="{{ product.seller.full_name() }}" 
                              class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                     {% else %}
                         <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
@@ -32,7 +32,7 @@
                         </div>
                     {% endif %}
                     <div>
-                        <strong>{{ product.seller.full_name }}</strong>
+                        <strong>{{ product.seller.full_name() }}</strong>
                         {% if product.seller.is_verified %}
                             <i class="fas fa-check-circle text-success ms-1" title="Verified Seller"></i>
                         {% endif %}
@@ -168,7 +168,7 @@
                                 <div class="d-flex justify-content-between align-items-start mb-2">
                                     <div class="d-flex align-items-center">
                                         {% if review.reviewer.profile_image_url %}
-                                            <img src="{{ review.reviewer.profile_image_url }}" alt="{{ review.reviewer.full_name }}" 
+                                            <img src="{{ review.reviewer.profile_image_url }}" alt="{{ review.reviewer.full_name() }}" 
                                                  class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
                                         {% else %}
                                             <div class="bg-secondary rounded-circle me-2 d-flex align-items-center justify-content-center" 
@@ -177,7 +177,7 @@
                                             </div>
                                         {% endif %}
                                         <div>
-                                            <strong>{{ review.reviewer.full_name }}</strong>
+                                            <strong>{{ review.reviewer.full_name() }}</strong>
                                             {% if review.is_verified_purchase %}
                                                 <span class="badge bg-success ms-1">Verified Purchase</span>
                                             {% endif %}
@@ -270,7 +270,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center mb-3">
                         {% if product.seller.profile_image_url %}
-                            <img src="{{ product.seller.profile_image_url }}" alt="{{ product.seller.full_name }}" 
+                            <img src="{{ product.seller.profile_image_url }}" alt="{{ product.seller.full_name() }}" 
                                  class="rounded-circle me-3" style="width: 50px; height: 50px; object-fit: cover;">
                         {% else %}
                             <div class="bg-secondary rounded-circle me-3 d-flex align-items-center justify-content-center" 
@@ -279,7 +279,7 @@
                             </div>
                         {% endif %}
                         <div>
-                            <h6 class="mb-0">{{ product.seller.full_name }}</h6>
+                            <h6 class="mb-0">{{ product.seller.full_name() }}</h6>
                             {% if product.seller.company %}
                                 <small class="text-muted">{{ product.seller.company }}</small>
                             {% endif %}

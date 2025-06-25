@@ -44,7 +44,7 @@
                             <p class="text-muted mb-2">{{ product.short_description }}</p>
                             <div class="d-flex align-items-center gap-3">
                                 <small class="text-muted">
-                                    <i class="fas fa-user me-1"></i>by {{ product.seller.full_name }}
+                                    <i class="fas fa-user me-1"></i>by {{ product.seller.full_name() }}
                                 </small>
                                 <small class="text-muted">
                                     <i class="fas fa-folder me-1"></i>{{ product.category.name }}
@@ -106,7 +106,7 @@
                             </div>
                             <div class="col-12">
                                 <label class="form-label">Cardholder Name</label>
-                                <input type="text" class="form-control" value="{{ current_user.full_name }}" readonly>
+                                <input type="text" class="form-control" value="{{ current_user.full_name() }}" readonly>
                             </div>
                         </div>
                     </div>
