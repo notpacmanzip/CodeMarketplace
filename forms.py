@@ -21,6 +21,24 @@ class ProductForm(FlaskForm):
     category_id = SelectField('Category', coerce=int, validators=[DataRequired()])
     programming_languages = StringField('Programming Languages', validators=[Length(max=500)], 
                                       description='Comma-separated list (e.g., Python, JavaScript, Go)')
+    programming_language = SelectField('Primary Language', choices=[
+        ('python', 'Python'),
+        ('javascript', 'JavaScript'),
+        ('typescript', 'TypeScript'),
+        ('java', 'Java'),
+        ('cpp', 'C++'),
+        ('csharp', 'C#'),
+        ('go', 'Go'),
+        ('rust', 'Rust'),
+        ('php', 'PHP'),
+        ('ruby', 'Ruby'),
+        ('swift', 'Swift'),
+        ('kotlin', 'Kotlin'),
+        ('html', 'HTML'),
+        ('css', 'CSS'),
+        ('other', 'Other')
+    ], validators=[DataRequired()])
+    category = SelectField('Category', coerce=int, validators=[DataRequired()])
     framework = StringField('Framework/Technology', validators=[Length(max=100)])
     license_type = SelectField('License Type', choices=[
         ('MIT', 'MIT License'),
@@ -35,6 +53,8 @@ class ProductForm(FlaskForm):
     github_url = StringField('GitHub Repository', validators=[Optional(), URL()])
     documentation_url = StringField('Documentation URL', validators=[Optional(), URL()])
     thumbnail = FileField('Thumbnail Image', validators=[FileAllowed(['jpg', 'png', 'gif', 'webp'], 'Images only!')])
+    tags = StringField('Tags', validators=[Length(max=500)], description='Comma-separated tags')
+    demo_files = FileField('Demo Files', validators=[FileAllowed(['zip', 'rar', 'tar', 'gz', 'py', 'js', 'html', 'css'], 'Allowed file types only!')])
 
 class ReviewForm(FlaskForm):
     rating = SelectField('Rating', choices=[(5, '5 Stars'), (4, '4 Stars'), (3, '3 Stars'), (2, '2 Stars'), (1, '1 Star')], 

@@ -67,11 +67,11 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    {{ form.avatar.label(class="form-label") }}
-                                    {{ form.avatar(class="form-control") }}
-                                    {% if form.avatar.errors %}
+                                    {{ form.avatar_url.label(class="form-label") }}
+                                    {{ form.avatar_url(class="form-control") }}
+                                    {% if form.avatar_url.errors %}
                                         <div class="text-danger">
-                                            {% for error in form.avatar.errors %}
+                                            {% for error in form.avatar_url.errors %}
                                                 <small>{{ error }}</small>
                                             {% endfor %}
                                         </div>
