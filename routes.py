@@ -13,7 +13,8 @@ from forms import (ProfileForm, ProductForm, ReviewForm, MessageForm,
                    SearchForm, TeamForm, ProjectForm, RepositoryForm, FileForm,
                    MilestoneForm, CollaborationSessionForm, JoinTeamForm,
                    PaymentForm)
-from replit_auth import require_login, require_seller, require_admin, make_replit_blueprint
+from multi_auth import require_login
+from replit_auth import require_seller, require_admin
 from utils import save_uploaded_file, generate_conversation_id, format_price, get_language_choices, paginate_query
 
 
@@ -27,8 +28,7 @@ def replit_auth_authorized():
     return redirect(url_for("home"))
 
 
-# Register auth blueprint
-app.register_blueprint(make_replit_blueprint(), url_prefix="/auth")
+# Authentication is handled by auth_routes.py
 
 
 # Make session permanent

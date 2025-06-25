@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Stackly{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Your Profile</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 text-center">
+                            {% if current_user.profile_image_url %}
+                                <img src="{{ current_user.profile_image_url }}" alt="Profile" class="rounded-circle mb-3" style="width: 120px; height: 120px; object-fit: cover;">
+                            {% else %}
+                                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 120px; height: 120px;">
+                                    <i class="fas fa-user fa-3x text-white"></i>
+                                </div>
+                            {% endif %}
+                            
+                            <div class="badge bg-secondary mb-2">
+                                {% if current_user.id.startswith('google_') %}
+                                    <i class="fab fa-google me-1"></i>Google Account
+                                {% elif current_user.id.startswith('github_') %}
+                                    <i class="fab fa-github me-1"></i>GitHub Account
+                                {% else %}
+                                    <i class="fas fa-code me-1"></i>Replit Account
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-9">
+                            <div class="row mb-3">
+                                <div class="col-sm-3"><strong>Full Name:</strong></div>
+                                <div class="col-sm-9">{{ current_user.full_name() or 'Not provided' }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-3"><strong>Email:</strong></div>
+                                <div class="col-sm-9">{{ current_user.email or 'Not provided' }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-3"><strong>Member Since:</strong></div>
+                                <div class="col-sm-9">{{ current_user.created_at.strftime('%B %d, %Y') if current_user.created_at else 'Unknown' }}</div>
+                            </div>
+                            
+                            <div class="row mb-3">
+                                <div class="col-sm-3"><strong>User ID:</strong></div>
+                                <div class="col-sm-9"><code>{{ current_user.id }}</code></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>Account Actions</h5>
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('dashboard') }}" class="btn btn-primary">
+                                    <i class="fas fa-tachometer-alt me-2"></i>Go to Dashboard
+                                </a>
+                                <a href="{{ url_for('auth_logout') }}" class="btn btn-outline-danger">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5>Account Statistics</h5>
+                            <div class="small text-muted">
+                                <div class="mb-2">
+                                    <i class="fas fa-folder me-2"></i>
+                                    <strong>{{ current_user.owned_repositories|length }}</strong> repositories created
+                                </div>
+                                <div class="mb-2">
+                                    <i class="fas fa-users me-2"></i>
+                                    <strong>{{ current_user.owned_teams|length if current_user.owned_teams else 0 }}</strong> teams owned
+                                </div>
+                                <div class="mb-2">
+                                    <i class="fas fa-project-diagram me-2"></i>
+                                    <strong>{{ current_user.owned_projects|length if current_user.owned_projects else 0 }}</strong> projects created
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
