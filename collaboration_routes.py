@@ -273,6 +273,24 @@ def repository_editor(repo_id):
                          repository=repository, files=files, can_edit=can_edit)
 
 
+@app.route('/repositories/<int:repo_id>/share')
+@require_login
+def share_repository(repo_id):
+    """Share repository page"""
+    repository = CodeRepository.query.get_or_404(repo_id)
+    
+    # Check if user has access
+    is_contributor = ProjectContributor.query.filter_by(
+        project_id=repository.project_id, user_id=current_user.id
+    ).first()
+    
+    if not is_contributor and repository.owner_id != current_user.id:
+        if repository.is_private:
+            abort(403)
+    
+    return render_template('repository/share.html', repository=repository)
+
+
 @app.route('/files/<int:file_id>/edit', methods=['GET', 'POST'])
 @require_login
 def edit_file(file_id):

@@ -79,10 +79,10 @@
                                     <td>
                                         <span class="badge bg-secondary">{{ file.language.title() if file.language else 'Unknown' }}</span>
                                     </td>
-                                    <td>{{ file.size or 0 }} bytes</td>
+                                    <td>{{ file.file_size or 0 }} bytes</td>
                                     <td>{{ file.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
                                     <td>
-                                        <a href="{{ url_for('edit_file', repo_id=repository.id, file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
+                                        <a href="{{ url_for('edit_file', file_id=file.id) }}" class="btn btn-sm btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
                                         <button class="btn btn-sm btn-outline-danger" onclick="downloadFile({{ file.id }})">
@@ -130,13 +130,13 @@
                         </a>
                     </div>
                     <div class="mb-3">
-                        <strong>Primary Language:</strong><br>
-                        <span class="text-muted">{{ repository.language or "Not specified" }}</span>
+                        <strong>Default Branch:</strong><br>
+                        <span class="text-muted">{{ repository.default_branch or "main" }}</span>
                     </div>
                     <div class="mb-3">
                         <strong>Visibility:</strong><br>
-                        <span class="badge bg-{{ 'success' if repository.visibility == 'public' else 'warning' if repository.visibility == 'team' else 'secondary' }}">
-                            {{ repository.visibility.title() }}
+                        <span class="badge bg-{{ 'warning' if repository.is_private else 'success' }}">
+                            {{ 'Private' if repository.is_private else 'Public' }}
                         </span>
                     </div>
                     <div class="mb-0">
@@ -153,8 +153,8 @@
                 </div>
                 <div class="card-body">
                     <div class="d-grid gap-2">
-                        <a href="{{ url_for('collaborative_editor', project_id=repository.project.id) }}" class="btn btn-success">
-                            <i class="fas fa-code me-2"></i>Open Collaborative Editor
+                        <a href="{{ url_for('repository_editor', repo_id=repository.id) }}" class="btn btn-success">
+                            <i class="fas fa-code me-2"></i>Open Code Editor
                         </a>
                         <a href="{{ url_for('create_file', repo_id=repository.id) }}" class="btn btn-primary">
                             <i class="fas fa-plus me-2"></i>Add New File
