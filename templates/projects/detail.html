@@ -64,7 +64,7 @@
                     <h5 class="mb-0">Project Requirements</h5>
                 </div>
                 <div class="card-body">
-                    <p class="mb-0">{{ project.requirements|nl2br }}</p>
+                    <p class="mb-0">{{ project.requirements|nl2br|safe }}</p>
                 </div>
             </div>
             {% endif %}

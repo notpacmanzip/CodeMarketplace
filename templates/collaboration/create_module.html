@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Create Code Module{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Create Code Module</h4>
+                    <small class="text-muted">Share reusable code components with the community</small>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.name.label(class="form-label") }}
+                                    {{ form.name(class="form-control") }}
+                                    {% if form.name.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.name.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.module_type.label(class="form-label") }}
+                                    {{ form.module_type(class="form-select") }}
+                                    {% if form.module_type.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.module_type.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows="3") }}
+                            {% if form.description.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.description.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.language.label(class="form-label") }}
+                            {{ form.language(class="form-select") }}
+                            {% if form.language.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.language.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.code_content.label(class="form-label") }}
+                            {{ form.code_content(class="form-control", rows="15", style="font-family: monospace;") }}
+                            {% if form.code_content.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.code_content.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.dependencies.label(class="form-label") }}
+                            {{ form.dependencies(class="form-control", rows="3") }}
+                            <small class="form-text text-muted">{{ form.dependencies.description }}</small>
+                            {% if form.dependencies.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.dependencies.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.tags.label(class="form-label") }}
+                            {{ form.tags(class="form-control") }}
+                            <small class="form-text text-muted">{{ form.tags.description }}</small>
+                            {% if form.tags.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.tags.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.is_public(class="form-check-input") }}
+                                    {{ form.is_public.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check mb-3">
+                                    {{ form.is_reusable(class="form-check-input") }}
+                                    {{ form.is_reusable.label(class="form-check-label") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('module_library') }}" class="btn btn-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Auto-detect language based on code content
+    const codeContent = document.getElementById('code_content');
+    const languageSelect = document.getElementById('language');
+    
+    codeContent.addEventListener('blur', function() {
+        if (languageSelect.value === '' && this.value.trim()) {
+            // Simple language detection based on common patterns
+            const code = this.value.toLowerCase();
+            if (code.includes('def ') || code.includes('import ') || code.includes('print(')) {
+                languageSelect.value = 'python';
+            } else if (code.includes('function ') || code.includes('const ') || code.includes('console.log')) {
+                languageSelect.value = 'javascript';
+            } else if (code.includes('public class') || code.includes('import java')) {
+                languageSelect.value = 'java';
+            } else if (code.includes('#include') || code.includes('int main')) {
+                languageSelect.value = 'cpp';
+            }
+        }
+    });
+});
+</script>
+{% endblock %}
