@@ -49,9 +49,15 @@ def project_repositories(project_id):
         if not project.is_public:
             abort(403)
     
-    repositories = CodeRepository.query.filter_by(project_id=project_id).order_by(
+    # Get repositories based on visibility and user access
+    repositories = []
+    all_repos = CodeRepository.query.filter_by(project_id=project_id).order_by(
         desc(CodeRepository.updated_at)
     ).all()
+    
+    for repo in all_repos:
+        if repo.can_access(current_user):
+            repositories.append(repo)
     
     return render_template('collaboration/repositories.html', 
                          project=project, 

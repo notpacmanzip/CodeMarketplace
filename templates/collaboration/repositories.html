@@ -26,10 +26,18 @@
                                         {{ repo.name }}
                                     </a>
                                 </h5>
-                                {% if repo.is_private %}
-                                    <span class="badge bg-secondary">Private</span>
+                                {% if repo.visibility == 'private' %}
+                                    <span class="badge bg-secondary">
+                                        <i class="fas fa-lock"></i> Private
+                                    </span>
+                                {% elif repo.visibility == 'team' %}
+                                    <span class="badge bg-primary">
+                                        <i class="fas fa-users"></i> Team
+                                    </span>
                                 {% else %}
-                                    <span class="badge bg-success">Public</span>
+                                    <span class="badge bg-success">
+                                        <i class="fas fa-globe"></i> Public
+                                    </span>
                                 {% endif %}
                             </div>
                             
