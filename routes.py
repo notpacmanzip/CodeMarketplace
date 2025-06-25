@@ -1034,9 +1034,14 @@ def collaborative_dashboard():
                          notifications=notifications)
 
 
+# Import new route modules
+import forum_routes
+import collaboration_routes
+
 # Initialize default data when the app starts
 with app.app_context():
     create_default_data()
+    forum_routes.create_default_forum_data()
 
 # Error handlers
 @app.errorhandler(404)

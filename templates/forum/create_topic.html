@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Create New Topic{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="mb-0">Create New Topic</h3>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    {{ form.title.label(class="form-label") }}
+                                    {{ form.title(class="form-control") }}
+                                    {% if form.title.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.title.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.category_id.label(class="form-label") }}
+                                    {{ form.category_id(class="form-select") }}
+                                    {% if form.category_id.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.category_id.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            {{ form.content.label(class="form-label") }}
+                            {{ form.content(class="form-control", rows="8") }}
+                            {% if form.content.errors %}
+                                <div class="text-danger">
+                                    {% for error in form.content.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <!-- Code Snippet Section -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Code Snippet (Optional)</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <div class="mb-3">
+                                            {{ form.code_language.label(class="form-label") }}
+                                            {{ form.code_language(class="form-select") }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mb-3">
+                                    {{ form.code_snippet.label(class="form-label") }}
+                                    {{ form.code_snippet(class="form-control", rows="6", placeholder="Paste your code here...") }}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8">
+                                <div class="mb-3">
+                                    {{ form.tags.label(class="form-label") }}
+                                    {{ form.tags(class="form-control", placeholder="e.g., python, bug, help") }}
+                                    {% if form.tags.errors %}
+                                        <div class="text-danger">
+                                            {% for error in form.tags.errors %}
+                                                <small>{{ error }}</small>
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                {% if current_user.user_type == 'admin' %}
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ form.is_pinned(class="form-check-input") }}
+                                        {{ form.is_pinned.label(class="form-check-label") }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('forum_index') }}" class="btn btn-secondary">Cancel</a>
+                            {{ form.submit(class="btn btn-primary") }}
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Auto-resize textarea
+document.addEventListener('DOMContentLoaded', function() {
+    const textareas = document.querySelectorAll('textarea');
+    textareas.forEach(textarea => {
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    });
+});
+</script>
+{% endblock %}

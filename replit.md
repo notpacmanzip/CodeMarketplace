@@ -51,11 +51,28 @@ DevMarket is a comprehensive collaborative coding platform built with Flask, des
 - Public project discovery and contribution
 
 ### Real-time Collaborative Coding
-- Multi-user code editing environment
+- Multi-user code editing environment with Monaco Editor
 - File and repository management within projects
 - Version control integration with commit tracking
 - Live chat during coding sessions
 - Session-based collaboration with participant management
+- Real-time code synchronization between participants
+
+### Community Forum System
+- Category-based discussion forums
+- Topic creation with code snippet support
+- Reply system with nested comments
+- Voting system for topics and replies
+- Search and filtering capabilities
+- Solution marking for problem-solving
+
+### Code Module Library
+- Shareable code modules and snippets
+- Language-specific categorization
+- Download and import functionality
+- Public module discovery
+- Tagging and search system
+- Usage analytics and popularity tracking
 
 ### Repository Management
 - Project-based repository organization

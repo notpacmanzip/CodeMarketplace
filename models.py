@@ -434,3 +434,9 @@ class Notification(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.now)
     
     user = db.relationship('User', backref='notifications')
+
+
+# Import forum and collaboration models
+from forum_models import ForumCategory, ForumTopic, ForumReply, ForumVote
+from collaboration_models import (CodeRepository, CodeFile, CodeCommit, LiveCodingSession, 
+                                LiveSessionParticipant, CodeChange, CodeModule)
