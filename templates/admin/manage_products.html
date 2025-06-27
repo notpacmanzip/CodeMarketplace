@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Products - Admin - Stackly{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-box me-2"></i>Manage Products & Sales</h1>
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Status Filter</label>
+                            <select name="status" class="form-select" onchange="this.form.submit()">
+                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Products</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Approval</option>
+                                <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                                <option value="featured" {% if status_filter == 'featured' %}selected{% endif %}>Featured</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Category</label>
+                            <select name="category" class="form-select" onchange="this.form.submit()">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" {% if category_filter == category.id|string %}selected{% endif %}>
+                                    {{ category.name }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                <a href="{{ url_for('admin.manage_products') }}" class="btn btn-outline-secondary">Clear</a>
+                                <a href="{{ url_for('admin.sales_analytics') }}" class="btn btn-outline-success">View Analytics</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Products List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list me-2"></i>Products ({{ products.total }} total)</h5>
+                </div>
+                <div class="card-body">
+                    {% if products.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Seller</th>
+                                        <th>Category</th>
+                                        <th>Price</th>
+                                        <th>Sales Stats</th>
+                                        <th>Status</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in products.items %}
+                                    {% set stats = product_stats.get(product.id, {}) %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                {% if product.main_image %}
+                                                <img src="{{ product.main_image }}" alt="{{ product.title }}" 
+                                                     class="rounded me-3" style="width: 50px; height: 50px; object-fit: cover;">
+                                                {% else %}
+                                                <div class="bg-light rounded me-3 d-flex align-items-center justify-content-center" 
+                                                     style="width: 50px; height: 50px;">
+                                                    <i class="fas fa-image text-muted"></i>
+                                                </div>
+                                                {% endif %}
+                                                <div>
+                                                    <h6 class="mb-0">
+                                                        <a href="{{ url_for('product_detail', product_id=product.id) }}" 
+                                                           class="text-decoration-none">{{ product.title[:40] }}...</a>
+                                                    </h6>
+                                                    <small class="text-muted">{{ product.language or 'N/A' }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <h6 class="mb-0">{{ product.seller.full_name() }}</h6>
+                                                <small class="text-muted">@{{ product.seller.username }}</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-light text-dark">{{ product.category.name }}</span>
+                                        </td>
+                                        <td>
+                                            <strong class="text-success">${{ "%.2f"|format(product.price) }}</strong>
+                                        </td>
+                                        <td>
+                                            <div class="text-center">
+                                                <strong>{{ stats.get('sales', 0) }}</strong> sales
+                                                <br><small class="text-success">${{ "%.2f"|format(stats.get('revenue', 0)) }} revenue</small>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex flex-column gap-1">
+                                                {% if product.is_approved %}
+                                                    <span class="badge bg-success">Approved</span>
+                                                {% else %}
+                                                    <span class="badge bg-warning">Pending</span>
+                                                {% endif %}
+                                                
+                                                {% if product.is_featured %}
+                                                    <span class="badge bg-primary">Featured</span>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                        <td>{{ product.created_at.strftime('%Y-%m-%d') }}</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('product_detail', product_id=product.id) }}" 
+                                                   class="btn btn-outline-primary" title="View Product">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                
+                                                <!-- Approval Actions -->
+                                                {% if not product.is_approved %}
+                                                <form method="POST" action="{{ url_for('admin.approve_product', product_id=product.id) }}" class="d-inline">
+                                                    <input type="hidden" name="action" value="approve">
+                                                    <button type="submit" class="btn btn-outline-success" 
+                                                            onclick="return confirm('Approve this product?')" title="Approve">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                                <form method="POST" action="{{ url_for('admin.approve_product', product_id=product.id) }}" class="d-inline">
+                                                    <input type="hidden" name="action" value="reject">
+                                                    <button type="submit" class="btn btn-outline-danger" 
+                                                            onclick="return confirm('Reject this product?')" title="Reject">
+                                                        <i class="fas fa-times"></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                                
+                                                <!-- Feature Toggle -->
+                                                <form method="POST" action="{{ url_for('admin.approve_product', product_id=product.id) }}" class="d-inline">
+                                                    <input type="hidden" name="action" value="feature">
+                                                    <button type="submit" class="btn btn-outline-info" 
+                                                            title="{{ 'Unfeature' if product.is_featured else 'Feature' }}">
+                                                        <i class="fas fa-star{{ '' if product.is_featured else '-o' }}"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if products.pages > 1 %}
+                        <nav aria-label="Products pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if products.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.manage_products', page=products.prev_num, status=status_filter, category=category_filter) }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for page_num in products.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != products.page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('admin.manage_products', page=page_num, status=status_filter, category=category_filter) }}">{{ page_num }}</a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if products.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.manage_products', page=products.next_num, status=status_filter, category=category_filter) }}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No products found</h5>
+                            <p class="text-muted">No products match the current filter criteria.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ products.total }}</h3>
+                    <p class="text-muted mb-0">Total Products</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">
+                        {{ products.items | selectattr('is_approved') | list | length }}
+                    </h3>
+                    <p class="text-muted mb-0">Approved</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">
+                        {{ products.items | rejectattr('is_approved') | list | length }}
+                    </h3>
+                    <p class="text-muted mb-0">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">
+                        {{ products.items | selectattr('is_featured') | list | length }}
+                    </h3>
+                    <p class="text-muted mb-0">Featured</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Bulk actions and confirmations
+function confirmBulkAction(action, count) {
+    const messages = {
+        'approve': `Are you sure you want to approve ${count} selected products?`,
+        'reject': `Are you sure you want to reject ${count} selected products?`,
+        'feature': `Are you sure you want to feature ${count} selected products?`
+    };
+    return confirm(messages[action] || 'Are you sure?');
+}
+
+// Auto-refresh every 2 minutes for real-time updates
+setInterval(function() {
+    if (document.hidden) return; // Don't refresh if tab is not active
+    location.reload();
+}, 120000);
+</script>
+{% endblock %}

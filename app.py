@@ -39,6 +39,15 @@ def nl2br_filter(text):
         return text.replace('\n', '<br>')
     return text
 
+@app.template_filter('from_json')
+def from_json_filter(text):
+    """Parse JSON string to Python object"""
+    import json
+    try:
+        return json.loads(text or '[]')
+    except:
+        return []
+
 # Create tables
 with app.app_context():
     import models  # noqa: F401

@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Reviewers - Admin - Stackly{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-user-check me-2"></i>Manage Code Reviewers</h1>
+                <a href="{{ url_for('admin.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">Status Filter</label>
+                            <select name="status" class="form-select" onchange="this.form.submit()">
+                                <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Reviewers</option>
+                                <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified Only</option>
+                                <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Verification</option>
+                                <option value="available" {% if status_filter == 'available' %}selected{% endif %}>Available Now</option>
+                            </select>
+                        </div>
+                        <div class="col-md-8">
+                            <label class="form-label">&nbsp;</label>
+                            <div class="d-flex gap-2">
+                                <button type="submit" class="btn btn-primary">Apply Filters</button>
+                                <a href="{{ url_for('admin.manage_reviewers') }}" class="btn btn-outline-secondary">Clear</a>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviewers List -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-list me-2"></i>Reviewer Portfolios ({{ reviewers.total }} total)</h5>
+                </div>
+                <div class="card-body">
+                    {% if reviewers.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Reviewer</th>
+                                        <th>Verification</th>
+                                        <th>Experience</th>
+                                        <th>Specializations</th>
+                                        <th>Stats</th>
+                                        <th>Rating</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for reviewer in reviewers.items %}
+                                    {% set stats = reviewer_stats.get(reviewer.user_id, {}) %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                                                    {{ reviewer.user.username[0].upper() }}
+                                                </div>
+                                                <div>
+                                                    <h6 class="mb-0">{{ reviewer.user.full_name() }}</h6>
+                                                    <small class="text-muted">@{{ reviewer.user.username }}</small>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            {% if reviewer.is_verified %}
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check me-1"></i>Verified
+                                                </span>
+                                                {% if reviewer.verification_date %}
+                                                <br><small class="text-muted">{{ reviewer.verification_date.strftime('%Y-%m-%d') }}</small>
+                                                {% endif %}
+                                            {% else %}
+                                                <span class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>Pending
+                                                </span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <strong>{{ reviewer.years_experience }} years</strong>
+                                            <br><small class="text-muted">Max {{ reviewer.max_concurrent_reviews }} concurrent</small>
+                                        </td>
+                                        <td>
+                                            {% set specializations = reviewer.specializations|from_json %}
+                                            {% if specializations %}
+                                                {% for spec in specializations[:2] %}
+                                                    <span class="badge bg-info me-1">{{ spec }}</span>
+                                                {% endfor %}
+                                                {% if specializations|length > 2 %}
+                                                    <span class="badge bg-secondary">+{{ specializations|length - 2 }}</span>
+                                                {% endif %}
+                                            {% else %}
+                                                <small class="text-muted">Not specified</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="text-center">
+                                                <strong>{{ stats.get('total_reviews', 0) }}</strong>
+                                                <br><small class="text-muted">reviews</small>
+                                            </div>
+                                            {% if stats.get('recent_reviews', 0) > 0 %}
+                                            <small class="text-success">{{ stats.get('recent_reviews', 0) }} this month</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if stats.get('avg_rating', 0) > 0 %}
+                                                <div class="d-flex align-items-center">
+                                                    <span class="me-1">{{ stats.get('avg_rating', 0) }}</span>
+                                                    <div class="text-warning">
+                                                        {% for i in range(5) %}
+                                                            {% if i < stats.get('avg_rating', 0) %}
+                                                                <i class="fas fa-star"></i>
+                                                            {% else %}
+                                                                <i class="far fa-star"></i>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            {% else %}
+                                                <small class="text-muted">No ratings yet</small>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if reviewer.is_available %}
+                                                <span class="badge bg-success">Available</span>
+                                            {% else %}
+                                                <span class="badge bg-secondary">Unavailable</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('admin.reviewer_detail', user_id=reviewer.user_id) }}" 
+                                                   class="btn btn-outline-primary" title="View Portfolio">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                {% if not reviewer.is_verified %}
+                                                <form method="POST" action="{{ url_for('admin.verify_reviewer', user_id=reviewer.user_id) }}" class="d-inline">
+                                                    <input type="hidden" name="action" value="verify">
+                                                    <button type="submit" class="btn btn-outline-success" 
+                                                            onclick="return confirm('Verify this reviewer?')" title="Verify Reviewer">
+                                                        <i class="fas fa-check"></i>
+                                                    </button>
+                                                </form>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if reviewers.pages > 1 %}
+                        <nav aria-label="Reviewers pagination">
+                            <ul class="pagination justify-content-center">
+                                {% if reviewers.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.manage_reviewers', page=reviewers.prev_num, status=status_filter) }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for page_num in reviewers.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != reviewers.page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('admin.manage_reviewers', page=page_num, status=status_filter) }}">{{ page_num }}</a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if reviewers.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.manage_reviewers', page=reviewers.next_num, status=status_filter) }}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-user-slash fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No reviewers found</h5>
+                            <p class="text-muted">No reviewers match the current filter criteria.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Statistics -->
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-primary">{{ reviewers.total }}</h3>
+                    <p class="text-muted mb-0">Total Reviewers</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-success">
+                        {{ reviewers.items | selectattr('is_verified') | list | length }}
+                    </h3>
+                    <p class="text-muted mb-0">Verified</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-warning">
+                        {{ reviewers.items | rejectattr('is_verified') | list | length }}
+                    </h3>
+                    <p class="text-muted mb-0">Pending</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h3 class="text-info">
+                        {{ reviewers.items | selectattr('is_available') | list | length }}
+                    </h3>
+                    <p class="text-muted mb-0">Available</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Add confirmation for bulk actions
+function confirmAction(message) {
+    return confirm(message);
+}
+
+// Auto-refresh every 2 minutes for real-time updates
+setInterval(function() {
+    if (document.hidden) return; // Don't refresh if tab is not active
+    location.reload();
+}, 120000);
+</script>
+{% endblock %}

@@ -119,8 +119,8 @@
                                     <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{{ url_for('seller_dashboard') }}"><i class="fas fa-chart-line me-2"></i>Seller Dashboard</a></li>
                                 {% endif %}
-                                {% if current_user.user_type == 'admin' %}
-                                    <li><a class="dropdown-item" href="{{ url_for('admin_dashboard') }}"><i class="fas fa-cog me-2"></i>Admin Panel</a></li>
+                                {% if current_user.is_admin %}
+                                    <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="fas fa-shield-alt me-2"></i>Admin Panel</a></li>
                                 {% endif %}
                                 <li><hr class="dropdown-divider"></li>
                                 <li><a class="dropdown-item" href="{{ url_for('auth_logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
