@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import login_required, current_user
 from sqlalchemy import desc, func
 from app import db
@@ -10,9 +10,46 @@ import json
 
 admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
 
+ADMIN_PASSWORD = "4116walidnadi"
+
+def check_admin_password():
+    """Check if admin password is correct"""
+    return session.get('admin_authenticated') == True
+
+def require_admin_auth():
+    """Decorator to require admin password authentication"""
+    def decorator(f):
+        def wrapper(*args, **kwargs):
+            if not check_admin_password():
+                return redirect(url_for('admin.login'))
+            return f(*args, **kwargs)
+        wrapper.__name__ = f.__name__
+        return wrapper
+    return decorator
+
+@admin_bp.route('/login', methods=['GET', 'POST'])
+def login():
+    """Admin login with password"""
+    if request.method == 'POST':
+        password = request.form.get('password')
+        if password == ADMIN_PASSWORD:
+            session['admin_authenticated'] = True
+            flash('Admin access granted!', 'success')
+            return redirect(url_for('admin.dashboard'))
+        else:
+            flash('Invalid admin password. Please try again.', 'error')
+    
+    return render_template('admin/login.html')
+
+@admin_bp.route('/logout')
+def logout():
+    """Admin logout"""
+    session.pop('admin_authenticated', None)
+    flash('Admin session ended.', 'info')
+    return redirect(url_for('admin.login'))
+
 @admin_bp.route('/')
-@login_required
-@require_admin
+@require_admin_auth()
 def dashboard():
     """Admin dashboard with overview statistics"""
     # Product sales statistics
@@ -44,8 +81,7 @@ def dashboard():
                          recent_submissions=recent_submissions)
 
 @admin_bp.route('/products')
-@login_required
-@require_admin
+@require_admin_auth()
 def manage_products():
     """Manage products and sales"""
     page = request.args.get('page', 1, type=int)
@@ -147,8 +183,7 @@ def sales_analytics():
                          days=days)
 
 @admin_bp.route('/reviewers')
-@login_required
-@require_admin
+@require_admin_auth()
 def manage_reviewers():
     """Manage code reviewers and their portfolios"""
     page = request.args.get('page', 1, type=int)
@@ -197,8 +232,7 @@ def manage_reviewers():
                          reviewer_stats=reviewer_stats)
 
 @admin_bp.route('/reviewer/<user_id>')
-@login_required
-@require_admin
+@require_admin_auth()
 def reviewer_detail(user_id):
     """View detailed reviewer portfolio"""
     reviewer = ReviewerProfile.query.filter_by(user_id=user_id).first_or_404()
