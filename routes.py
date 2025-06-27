@@ -16,6 +16,10 @@ from forms import (ProfileForm, ProductForm, ReviewForm, MessageForm,
 from multi_auth import require_login
 from replit_auth import require_seller, require_admin
 from utils import save_uploaded_file, generate_conversation_id, format_price, get_language_choices, paginate_query
+from code_review_routes import code_review_bp
+
+# Register blueprints
+app.register_blueprint(code_review_bp)
 
 
 @app.route("/auth/replit_auth/authorized")

@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Become a Code Reviewer - Stackly{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-user-check me-2"></i>Apply to Become a Code Reviewer</h4>
+                    <p class="text-muted mb-0">Share your expertise and help developers improve their code quality</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Professional Information -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Professional Background</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.bio.label(class="form-label") }}
+                            {{ form.bio(class="form-control", rows="5") }}
+                            <div class="form-text">Tell us about your professional experience, projects, and expertise (minimum 50 characters)</div>
+                            {% if form.bio.errors %}
+                                <div class="text-danger small">{{ form.bio.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.years_experience.label(class="form-label") }}
+                                {{ form.years_experience(class="form-control") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.max_concurrent_reviews.label(class="form-label") }}
+                                {{ form.max_concurrent_reviews(class="form-select") }}
+                                <div class="form-text">How many reviews can you handle simultaneously?</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Technical Expertise -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Technical Expertise</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.specializations.label(class="form-label") }}
+                            {{ form.specializations(class="form-control") }}
+                            <div class="form-text">{{ form.specializations.description }}</div>
+                            {% if form.specializations.errors %}
+                                <div class="text-danger small">{{ form.specializations.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.programming_languages.label(class="form-label") }}
+                                {{ form.programming_languages(class="form-control") }}
+                                <div class="form-text">{{ form.programming_languages.description }}</div>
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.frameworks.label(class="form-label") }}
+                                {{ form.frameworks(class="form-control") }}
+                                <div class="form-text">{{ form.frameworks.description }}</div>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.preferred_review_types.label(class="form-label") }}
+                            {{ form.preferred_review_types(class="form-control") }}
+                            <div class="form-text">{{ form.preferred_review_types.description }}</div>
+                        </div>
+                        
+                        <!-- Professional Links -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Professional Links</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.portfolio_url.label(class="form-label") }}
+                                {{ form.portfolio_url(class="form-control") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.github_url.label(class="form-label") }}
+                                {{ form.github_url(class="form-control") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.linkedin_url.label(class="form-label") }}
+                            {{ form.linkedin_url(class="form-control") }}
+                        </div>
+                        
+                        <!-- Availability -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Availability</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check">
+                                {{ form.is_available(class="form-check-input") }}
+                                {{ form.is_available.label(class="form-check-label") }}
+                            </div>
+                        </div>
+                        
+                        <!-- Application Guidelines -->
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-info-circle me-2"></i>Application Guidelines</h6>
+                            <ul class="mb-0 small">
+                                <li>All applications are reviewed by our team for quality and expertise</li>
+                                <li>Verification may include portfolio review and technical assessment</li>
+                                <li>Approved reviewers earn based on review complexity and quality</li>
+                                <li>We prioritize reviewers with proven industry experience</li>
+                                <li>Professional links help establish credibility (GitHub, LinkedIn, Portfolio)</li>
+                                <li>Response time: 3-5 business days for application review</li>
+                            </ul>
+                        </div>
+                        
+                        <!-- Benefits Section -->
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h6><i class="fas fa-star me-2"></i>Reviewer Benefits</h6>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled small">
+                                            <li><i class="fas fa-check text-success me-2"></i>Flexible schedule</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Competitive compensation</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Professional networking</li>
+                                        </ul>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <ul class="list-unstyled small">
+                                            <li><i class="fas fa-check text-success me-2"></i>Skills development</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Industry recognition</li>
+                                            <li><i class="fas fa-check text-success me-2"></i>Quality badge system</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('code_review.dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-paper-plane me-1"></i>Submit Application
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Expected Timeline -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5><i class="fas fa-clock me-2"></i>Application Process Timeline</h5>
+                    <div class="row">
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-file-alt fa-2x"></i>
+                            </div>
+                            <h6>Step 1: Submit</h6>
+                            <small class="text-muted">Complete application form</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="text-info mb-2">
+                                <i class="fas fa-search fa-2x"></i>
+                            </div>
+                            <h6>Step 2: Review</h6>
+                            <small class="text-muted">Portfolio & background check (3-5 days)</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-tasks fa-2x"></i>
+                            </div>
+                            <h6>Step 3: Assessment</h6>
+                            <small class="text-muted">Technical evaluation (if needed)</small>
+                        </div>
+                        <div class="col-md-3 text-center mb-3">
+                            <div class="text-success mb-2">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <h6>Step 4: Approval</h6>
+                            <small class="text-muted">Start reviewing immediately</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

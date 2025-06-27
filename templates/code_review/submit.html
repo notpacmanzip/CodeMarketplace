@@ -1,0 +1,228 @@
+{% extends "base.html" %}
+
+{% block title %}Submit Code for Review - Stackly{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4><i class="fas fa-upload me-2"></i>Submit Code for Review</h4>
+                    <p class="text-muted mb-0">Get expert feedback on your code from verified reviewers</p>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data" id="submission-form">
+                        {{ form.hidden_tag() }}
+                        
+                        <!-- Project Details -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Project Information</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-8">
+                                {{ form.title.label(class="form-label") }}
+                                {{ form.title(class="form-control") }}
+                                {% if form.title.errors %}
+                                    <div class="text-danger small">{{ form.title.errors[0] }}</div>
+                                {% endif %}
+                            </div>
+                            <div class="col-md-4">
+                                {{ form.priority.label(class="form-label") }}
+                                {{ form.priority(class="form-select") }}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.description.label(class="form-label") }}
+                            {{ form.description(class="form-control", rows="4") }}
+                            <div class="form-text">{{ form.description.description }}</div>
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Review Type & Technology -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Review Requirements</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.review_type.label(class="form-label") }}
+                                {{ form.review_type(class="form-select") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.estimated_review_time.label(class="form-label") }}
+                                {{ form.estimated_review_time(class="form-select") }}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                {{ form.programming_language.label(class="form-label") }}
+                                {{ form.programming_language(class="form-select") }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.framework.label(class="form-label") }}
+                                {{ form.framework(class="form-control") }}
+                                <div class="form-text">{{ form.framework.description }}</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Code Submission Method -->
+                        <div class="row mb-3">
+                            <div class="col-12">
+                                <h5 class="border-bottom pb-2">Code Submission</h5>
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            {{ form.submission_type.label(class="form-label") }}
+                            {{ form.submission_type(class="form-select", id="submission-type") }}
+                        </div>
+                        
+                        <!-- File Upload Option -->
+                        <div class="mb-3" id="file-upload-section">
+                            {{ form.code_file.label(class="form-label") }}
+                            {{ form.code_file(class="form-control", accept=".zip,.tar,.tar.gz") }}
+                            <div class="form-text">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Maximum file size: 16MB. Supported formats: .zip, .tar.gz
+                            </div>
+                            {% if form.code_file.errors %}
+                                <div class="text-danger small">{{ form.code_file.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Repository URL Option -->
+                        <div class="mb-3" id="repo-url-section" style="display: none;">
+                            {{ form.repository_url.label(class="form-label") }}
+                            {{ form.repository_url(class="form-control", placeholder="https://github.com/username/repository") }}
+                            <div class="form-text">{{ form.repository_url.description }}</div>
+                            {% if form.repository_url.errors %}
+                                <div class="text-danger small">{{ form.repository_url.errors[0] }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Submission Guidelines -->
+                        <div class="alert alert-info">
+                            <h6><i class="fas fa-lightbulb me-2"></i>Submission Guidelines</h6>
+                            <ul class="mb-0 small">
+                                <li>Provide clear, descriptive project title and detailed description</li>
+                                <li>Specify exactly what type of feedback you're looking for</li>
+                                <li>Include any specific concerns or areas you'd like reviewed</li>
+                                <li>For file uploads: ensure your code is well-organized with clear file structure</li>
+                                <li>For repositories: make sure the repository is public or provide access</li>
+                                <li>Reviews typically take 24-72 hours depending on complexity</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <a href="{{ url_for('code_review.dashboard') }}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submit-btn">
+                                <i class="fas fa-paper-plane me-1"></i>Submit for Review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Pricing Info -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h5><i class="fas fa-tag me-2"></i>Review Pricing</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between">
+                                <span>General Review:</span>
+                                <strong>Free</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Performance Review:</span>
+                                <strong>$25</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Security Audit:</span>
+                                <strong>$50</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between">
+                                <span>Architecture Review:</span>
+                                <strong>$75</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Priority Review (24h):</span>
+                                <strong>+$25</strong>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <span>Urgent Review (12h):</span>
+                                <strong>+$50</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <small class="text-muted mt-2 d-block">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Payment is only required after you're satisfied with the review quality.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const submissionType = document.getElementById('submission-type');
+    const fileSection = document.getElementById('file-upload-section');
+    const repoSection = document.getElementById('repo-url-section');
+    
+    function toggleSections() {
+        if (submissionType.value === 'file_upload') {
+            fileSection.style.display = 'block';
+            repoSection.style.display = 'none';
+        } else {
+            fileSection.style.display = 'none';
+            repoSection.style.display = 'block';
+        }
+    }
+    
+    submissionType.addEventListener('change', toggleSections);
+    toggleSections(); // Initial setup
+    
+    // Form validation
+    document.getElementById('submission-form').addEventListener('submit', function(e) {
+        const submitBtn = document.getElementById('submit-btn');
+        const submissionTypeValue = submissionType.value;
+        const fileInput = document.querySelector('input[type="file"]');
+        const repoInput = document.querySelector('input[name="repository_url"]');
+        
+        if (submissionTypeValue === 'file_upload' && !fileInput.files.length) {
+            e.preventDefault();
+            alert('Please select a file to upload.');
+            return;
+        }
+        
+        if (submissionTypeValue === 'repository_url' && !repoInput.value.trim()) {
+            e.preventDefault();
+            alert('Please enter a repository URL.');
+            return;
+        }
+        
+        // Show loading state
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Submitting...';
+        submitBtn.disabled = true;
+    });
+});
+</script>
+{% endblock %}

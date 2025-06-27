@@ -1,0 +1,133 @@
+We want to implement a crowdsourced code review service where developers can submit their code for an on-demand audit. The system should allow developers to submit their code (via file upload or repository URL), and then connect them with verified expert reviewers who can audit and suggest improvements on the submitted code.
+
+Key Features to Implement:
+
+    Code Submission System:
+
+        Developers should be able to submit code either by:
+
+            Uploading a .zip file containing their codebase.
+
+            Providing a GitHub/GitLab repository URL.
+
+            Ensuring both options are supported and easily accessible in the UI.
+
+        Submissions should include a description box where the developer can specify the type of review they need (e.g., performance audit, security audit, best practices).
+
+        Upon submission, a unique ticket ID should be generated for each submission, making it easy to track.
+
+    Verification and Matching:
+
+        After a code submission is made, the system should match the code with a suitable reviewer based on the expertise required (e.g., security, performance, or a specific programming language or framework).
+
+        Expert reviewers should be verified on the platform before they can accept submissions. Verification could be based on their work history, certifications, or a testing process.
+
+        Ensure that reviewers are notified when there is a new code audit request and can choose to accept or decline.
+
+    Review Process:
+
+        Once a reviewer accepts a code review request, the review process begins. The reviewer should be able to:
+
+            View the submitted code.
+
+            Add inline comments or suggestions directly to the code.
+
+            Provide summary feedback that includes:
+
+                Performance optimizations.
+
+                Security vulnerabilities.
+
+                General best practices and improvements.
+
+            Upload any files (e.g., a report or fixed code).
+
+    Feedback and Ratings:
+
+        After the review is completed, developers should be able to rate the reviewer based on the quality and helpfulness of the feedback.
+
+        Reviews and ratings should be visible on the reviewer's profile.
+
+    Notification System:
+
+        Both the developer and the reviewer should receive notifications (via email and on-site alerts) when there’s a new review request, when the review is started, and when it is completed.
+
+        Implement an automated notification when a code submission is successfully matched with a reviewer.
+
+Technical Requirements and Guidelines:
+
+    Code Submission Validation:
+
+        Ensure validity checks are in place for file uploads:
+
+            Only allow certain file types (e.g., .zip, .tar.gz, .tar, etc.).
+
+            Check for file size limits.
+
+            If using a repository URL, validate that it points to an existing GitHub/GitLab repository and retrieve its contents.
+
+            Return meaningful error messages (e.g., "Invalid file format", "File size exceeds limit").
+
+    Error Handling:
+
+        500 Server Errors: These can occur if the server can't handle requests due to system overload, misconfigurations, or coding errors.
+
+            Ensure the server can handle large file uploads efficiently. If it can’t process large files, implement a chunk upload mechanism.
+
+            If there are issues with loading repositories (e.g., GitHub/GitLab API errors), ensure there is a graceful fallback and a user-friendly error message, such as "Unable to fetch the repository at this time. Please try again later."
+
+            If the system fails to match a reviewer after submission, display an error that says, “No reviewers are available at the moment. Please try again later.”
+
+    Scalability and Performance:
+
+        Optimize the system for performance, especially during peak times when multiple code submissions and reviews are happening.
+
+        Ensure that database queries for matching submissions to reviewers, processing file uploads, and storing comments are optimized.
+
+        Load balancing: If you expect high traffic, implement load balancing across multiple servers to prevent server crashes.
+
+    Database Structure:
+
+        The database should be structured to handle:
+
+            Code submissions with metadata like submission time, ticket ID, code type (repo URL or file upload), and review status.
+
+            Reviewers with profiles, availability, expertise tags (e.g., Python, security, etc.), and ratings.
+
+            Reviews that include reviewer comments, ratings, and submitted fixes.
+
+    Security:
+
+        Ensure that all user-submitted code is scanned for malware or other malicious code before being made available for review.
+
+        Store sensitive data, like code and reviewer comments, in a secure, encrypted database.
+
+        Implement rate-limiting and IP-blocking to prevent abuse of the system (e.g., spamming code submissions or overloading the server with requests).
+
+    UI/UX Guidelines:
+
+        Provide clear instructions for submitting code, selecting review types, and tracking progress.
+
+        The review dashboard should be intuitive, allowing developers and reviewers to:
+
+            View submitted code.
+
+            See review progress (e.g., "In progress," "Completed").
+
+            Easily navigate between code files and review suggestions.
+
+        Error messaging should be user-friendly, such as showing “Server error. Please try again” instead of a cryptic 500 error.
+
+    API Integrations:
+
+        If using third-party services (like GitHub/GitLab API for fetching code from repositories), ensure the API integrations are stable and error-free.
+
+        Use proper error handling and retries for these integrations in case of service downtime.
+
+Expected Outcome:
+
+    Developers should be able to easily submit their code, choose the type of review they need, and receive high-quality feedback from verified experts.
+
+    The system should be scalable and able to handle multiple code reviews and submissions simultaneously.
+
+    Zero downtime for submissions and reviews, with an emphasis on reducing any 500 server errors or other failures

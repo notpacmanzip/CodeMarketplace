@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}Code Review Service - Stackly{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Hero Section -->
+    <div class="row mb-5">
+        <div class="col-12 text-center">
+            <h1 class="display-4 mb-4">
+                <i class="fas fa-search-code me-3"></i>Professional Code Review Service
+            </h1>
+            <p class="lead text-muted mb-4">
+                Get expert feedback on your code from verified reviewers. Improve code quality, security, and performance.
+            </p>
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('auth_login') }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-upload me-2"></i>Submit Code for Review
+                </a>
+                <a href="{{ url_for('auth_login') }}" class="btn btn-outline-success btn-lg">
+                    <i class="fas fa-user-check me-2"></i>Become a Reviewer
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Statistics -->
+    <div class="row mb-5">
+        <div class="col-md-4">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-file-code fa-3x"></i>
+                    </div>
+                    <h3 class="text-primary">{{ total_submissions }}</h3>
+                    <p class="text-muted">Code Submissions</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-success mb-3">
+                        <i class="fas fa-check-circle fa-3x"></i>
+                    </div>
+                    <h3 class="text-success">{{ completed_reviews }}</h3>
+                    <p class="text-muted">Completed Reviews</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card text-center border-0 shadow-sm">
+                <div class="card-body">
+                    <div class="text-info mb-3">
+                        <i class="fas fa-users fa-3x"></i>
+                    </div>
+                    <h3 class="text-info">{{ active_reviewers }}</h3>
+                    <p class="text-muted">Expert Reviewers</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Grid -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">Why Choose Our Code Review Service?</h2>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-primary mb-3">
+                        <i class="fas fa-shield-alt fa-3x"></i>
+                    </div>
+                    <h5>Security Audit</h5>
+                    <p class="text-muted">Identify vulnerabilities and security best practices with expert security reviewers.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-success mb-3">
+                        <i class="fas fa-tachometer-alt fa-3x"></i>
+                    </div>
+                    <h5>Performance Optimization</h5>
+                    <p class="text-muted">Get recommendations to improve your code's speed and efficiency.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-info mb-3">
+                        <i class="fas fa-code fa-3x"></i>
+                    </div>
+                    <h5>Best Practices</h5>
+                    <p class="text-muted">Learn industry standards and clean code principles from experienced developers.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-warning mb-3">
+                        <i class="fas fa-clock fa-3x"></i>
+                    </div>
+                    <h5>Fast Turnaround</h5>
+                    <p class="text-muted">Get comprehensive reviews within 24-72 hours, with priority options available.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-danger mb-3">
+                        <i class="fas fa-certificate fa-3x"></i>
+                    </div>
+                    <h5>Verified Experts</h5>
+                    <p class="text-muted">All reviewers are verified professionals with proven track records.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4 mb-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <div class="text-secondary mb-3">
+                        <i class="fas fa-comments fa-3x"></i>
+                    </div>
+                    <h5>Detailed Feedback</h5>
+                    <p class="text-muted">Receive inline comments, suggestions, and comprehensive written reports.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">How It Works</h2>
+        </div>
+        
+        <div class="col-lg-3 mb-4 text-center">
+            <div class="mb-3">
+                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <span class="h4 mb-0">1</span>
+                </div>
+            </div>
+            <h5>Submit Your Code</h5>
+            <p class="text-muted">Upload files or provide a repository URL with project details and review requirements.</p>
+        </div>
+        
+        <div class="col-lg-3 mb-4 text-center">
+            <div class="mb-3">
+                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <span class="h4 mb-0">2</span>
+                </div>
+            </div>
+            <h5>Get Matched</h5>
+            <p class="text-muted">Our system automatically matches you with the best reviewer based on expertise and availability.</p>
+        </div>
+        
+        <div class="col-lg-3 mb-4 text-center">
+            <div class="mb-3">
+                <div class="bg-info text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <span class="h4 mb-0">3</span>
+                </div>
+            </div>
+            <h5>Receive Review</h5>
+            <p class="text-muted">Get comprehensive feedback with inline comments, ratings, and improvement suggestions.</p>
+        </div>
+        
+        <div class="col-lg-3 mb-4 text-center">
+            <div class="mb-3">
+                <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+                    <span class="h4 mb-0">4</span>
+                </div>
+            </div>
+            <h5>Rate & Improve</h5>
+            <p class="text-muted">Rate your experience and implement the suggested improvements to enhance your code.</p>
+        </div>
+    </div>
+
+    <!-- Pricing Section -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <h2 class="text-center mb-5">Transparent Pricing</h2>
+        </div>
+        
+        <div class="col-lg-6 offset-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <tbody>
+                                <tr>
+                                    <td>General Review</td>
+                                    <td class="text-end"><strong class="text-success">Free</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Performance Review</td>
+                                    <td class="text-end"><strong>$25</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Security Audit</td>
+                                    <td class="text-end"><strong>$50</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Architecture Review</td>
+                                    <td class="text-end"><strong>$75</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Priority Review (24h)</td>
+                                    <td class="text-end"><strong>+$25</strong></td>
+                                </tr>
+                                <tr>
+                                    <td>Urgent Review (12h)</td>
+                                    <td class="text-end"><strong>+$50</strong></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <small class="text-muted">
+                            <i class="fas fa-shield-alt me-1"></i>
+                            Pay only after you're satisfied with the review quality
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Call to Action -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-gradient" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body text-center text-white py-5">
+                    <h3>Ready to Improve Your Code?</h3>
+                    <p class="lead mb-4">Join thousands of developers who trust our expert reviewers</p>
+                    <a href="{{ url_for('auth_login') }}" class="btn btn-light btn-lg">
+                        <i class="fas fa-rocket me-2"></i>Get Started Today
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

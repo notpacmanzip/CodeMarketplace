@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Code Review Dashboard - Stackly{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1><i class="fas fa-code-branch me-2"></i>Code Review Dashboard</h1>
+                <div>
+                    <a href="{{ url_for('code_review.submit_code') }}" class="btn btn-primary me-2">
+                        <i class="fas fa-upload me-1"></i>Submit Code
+                    </a>
+                    {% if not reviewer_profile %}
+                    <a href="{{ url_for('code_review.become_reviewer') }}" class="btn btn-outline-success">
+                        <i class="fas fa-user-check me-1"></i>Become Reviewer
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">My Submissions</h5>
+                            <h2>{{ submissions|length }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-file-code fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% if reviewer_profile %}
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Active Reviews</h5>
+                            <h2>{{ assigned_reviews|length }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-eye fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Completed Reviews</h5>
+                            <h2>{{ reviewer_profile.completed_reviews }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-check-circle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Average Rating</h5>
+                            <h2>{{ "%.1f"|format(reviewer_profile.average_rating) }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-star fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-md-3">
+            <div class="card bg-secondary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Notifications</h5>
+                            <h2>{{ notifications|length }}</h2>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-bell fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <!-- Recent Submissions -->
+        <div class="col-lg-6">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5><i class="fas fa-history me-2"></i>Recent Submissions</h5>
+                    <a href="{{ url_for('code_review.my_submissions') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                </div>
+                <div class="card-body">
+                    {% if submissions %}
+                        {% for submission in submissions %}
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{{ url_for('code_review.submission_detail', submission_id=submission.id) }}" 
+                                       class="text-decoration-none">{{ submission.title }}</a>
+                                </h6>
+                                <small class="text-muted">
+                                    Ticket: {{ submission.ticket_id }} • 
+                                    {{ submission.programming_language }} • 
+                                    {{ submission.created_at.strftime('%Y-%m-%d') }}
+                                </small>
+                            </div>
+                            <span class="badge bg-{{ submission.get_status_badge() }}">{{ submission.status.title() }}</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-code fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No submissions yet</p>
+                            <a href="{{ url_for('code_review.submit_code') }}" class="btn btn-primary">Submit Your First Code</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Assigned Reviews / Notifications -->
+        <div class="col-lg-6">
+            {% if reviewer_profile %}
+            <div class="card">
+                <div class="card-header d-flex justify-content-between">
+                    <h5><i class="fas fa-tasks me-2"></i>Assigned Reviews</h5>
+                    <a href="{{ url_for('code_review.reviewer_profile') }}" class="btn btn-sm btn-outline-success">View Profile</a>
+                </div>
+                <div class="card-body">
+                    {% if assigned_reviews %}
+                        {% for review in assigned_reviews %}
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <h6 class="mb-1">
+                                    <a href="{{ url_for('code_review.conduct_review', submission_id=review.id) }}" 
+                                       class="text-decoration-none">{{ review.title }}</a>
+                                </h6>
+                                <small class="text-muted">
+                                    {{ review.programming_language }} • 
+                                    {{ review.review_type.replace('_', ' ').title() }} • 
+                                    Priority: {{ review.priority.title() }}
+                                </small>
+                            </div>
+                            <span class="badge bg-warning">In Review</span>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-clipboard-list fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No active reviews assigned</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+            <div class="card">
+                <div class="card-header">
+                    <h5><i class="fas fa-bell me-2"></i>Recent Notifications</h5>
+                </div>
+                <div class="card-body">
+                    {% if notifications %}
+                        {% for notification in notifications %}
+                        <div class="d-flex align-items-start py-2 border-bottom">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">{{ notification.title }}</h6>
+                                <p class="text-muted small mb-1">{{ notification.message }}</p>
+                                <small class="text-muted">{{ notification.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                            </div>
+                        </div>
+                        {% endfor %}
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('code_review.notifications') }}" class="btn btn-sm btn-outline-primary">View All Notifications</a>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-bell-slash fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No notifications</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Become Reviewer CTA -->
+    {% if not reviewer_profile %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body text-center">
+                    <h5><i class="fas fa-star me-2"></i>Become a Code Reviewer</h5>
+                    <p class="text-muted mb-3">Share your expertise and help other developers improve their code quality</p>
+                    <a href="{{ url_for('code_review.become_reviewer') }}" class="btn btn-success">
+                        <i class="fas fa-user-plus me-1"></i>Apply Now
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
