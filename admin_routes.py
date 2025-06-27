@@ -55,7 +55,7 @@ def dashboard():
     # Product sales statistics
     total_products = Product.query.count()
     total_sales = Purchase.query.count()
-    total_revenue = db.session.query(func.sum(Purchase.amount)).scalar() or 0
+    total_revenue = db.session.query(func.sum(Purchase.amount_paid)).scalar() or 0
     pending_products = Product.query.filter_by(is_approved=False).count()
     
     # Code review statistics
@@ -113,7 +113,7 @@ def manage_products():
     for product in products.items:
         stats = db.session.query(
             func.count(Purchase.id).label('total_sales'),
-            func.sum(Purchase.amount).label('total_revenue')
+            func.sum(Purchase.amount_paid).label('total_revenue')
         ).filter_by(product_id=product.id).first()
         
         product_stats[product.id] = {
@@ -141,7 +141,7 @@ def sales_analytics():
     sales_data = db.session.query(
         func.date(Purchase.created_at).label('date'),
         func.count(Purchase.id).label('sales'),
-        func.sum(Purchase.amount).label('revenue')
+        func.sum(Purchase.amount_paid).label('revenue')
     ).filter(Purchase.created_at >= start_date).group_by(
         func.date(Purchase.created_at)
     ).order_by('date').all()
@@ -151,17 +151,18 @@ def sales_analytics():
         Product.title,
         Product.price,
         func.count(Purchase.id).label('sales'),
-        func.sum(Purchase.amount).label('revenue')
+        func.sum(Purchase.amount_paid).label('revenue')
     ).join(Purchase).filter(
         Purchase.created_at >= start_date
     ).group_by(Product.id).order_by(desc('sales')).limit(10).all()
     
     # Top sellers
     top_sellers = db.session.query(
-        User.username,
-        User.full_name,
+        User.first_name,
+        User.last_name,
+        User.email,
         func.count(Purchase.id).label('sales'),
-        func.sum(Purchase.amount).label('revenue')
+        func.sum(Purchase.amount_paid).label('revenue')
     ).join(Product, User.id == Product.seller_id).join(Purchase).filter(
         Purchase.created_at >= start_date
     ).group_by(User.id).order_by(desc('revenue')).limit(10).all()
@@ -170,7 +171,7 @@ def sales_analytics():
     category_stats = db.session.query(
         Category.name,
         func.count(Purchase.id).label('sales'),
-        func.sum(Purchase.amount).label('revenue')
+        func.sum(Purchase.amount_paid).label('revenue')
     ).join(Product).join(Purchase).filter(
         Purchase.created_at >= start_date
     ).group_by(Category.id).order_by(desc('revenue')).all()
@@ -381,7 +382,7 @@ def sales_chart_data():
     sales_data = db.session.query(
         func.date(Purchase.created_at).label('date'),
         func.count(Purchase.id).label('sales'),
-        func.sum(Purchase.amount).label('revenue')
+        func.sum(Purchase.amount_paid).label('revenue')
     ).filter(Purchase.created_at >= start_date).group_by(
         func.date(Purchase.created_at)
     ).order_by('date').all()
